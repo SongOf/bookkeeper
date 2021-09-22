@@ -342,7 +342,16 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
          fi
-         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf"
+         case $HOSTNAME in
+             perf-bookkeeper-ys-sf-94045-[0-2].docker.ys)
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-1ssd.conf";;
+             perf-bookkeeper-ys-sf-94045-[3-5].docker.ys)
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-2ssd.conf";;
+             perf-bookkeeper-ys-sf-94045-[6-8].docker.ys)
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-1ssd_1hdd.conf";;
+             *)
+             BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf";;
+         esac
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-v.perf.preview-bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
