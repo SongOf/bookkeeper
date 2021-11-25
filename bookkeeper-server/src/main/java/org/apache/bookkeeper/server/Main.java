@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.bookkeeper.bookie.BookieShell;
 import org.apache.bookkeeper.bookie.ExitCode;
 import org.apache.bookkeeper.bookie.ScrubberStats;
 import org.apache.bookkeeper.common.component.ComponentInfoPublisher;
@@ -39,6 +40,7 @@ import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.conf.UncheckedConfigurationException;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.BookieServiceInfo.Endpoint;
+import org.apache.bookkeeper.meta.zk.ZKMetadataDriverBase;
 import org.apache.bookkeeper.server.component.ServerLifecycleComponent;
 import org.apache.bookkeeper.server.conf.BookieConfiguration;
 import org.apache.bookkeeper.server.http.BKHttpServiceProvider;
@@ -67,6 +69,7 @@ import org.apache.commons.lang3.StringUtils;
 public class Main {
 
     static final Options BK_OPTS = new Options();
+    static String CONF_FILE = null;
     static {
         BK_OPTS.addOption("c", "conf", true, "Configuration for Bookie Server");
         BK_OPTS.addOption("withAutoRecovery", false,
@@ -76,6 +79,7 @@ public class Main {
         BK_OPTS.addOption("z", "zkserver", true, "Zookeeper Server");
         BK_OPTS.addOption("m", "zkledgerpath", true, "Zookeeper ledgers root path");
         BK_OPTS.addOption("p", "bookieport", true, "bookie port exported");
+        BK_OPTS.addOption("bh", "advertisedAddress", true, "bookie advertisedAddress");
         BK_OPTS.addOption("j", "journal", true, "bookie journal directory");
         Option indexDirs = new Option ("i", "indexdirs", true, "bookie index directories");
         indexDirs.setArgs(10);
@@ -124,15 +128,15 @@ public class Main {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(BK_OPTS, args);
 
-            if (cmdLine.hasOption('h')) {
+            if (cmdLine.hasOption("h")) {
                 throw new IllegalArgumentException();
             }
 
             ServerConfiguration conf = new ServerConfiguration();
 
-            if (cmdLine.hasOption('c')) {
-                String confFile = cmdLine.getOptionValue("c");
-                loadConfFile(conf, confFile);
+            if (cmdLine.hasOption("c")) {
+                CONF_FILE = cmdLine.getOptionValue("c");
+                loadConfFile(conf, CONF_FILE);
             }
 
             if (cmdLine.hasOption("withAutoRecovery")) {
@@ -145,16 +149,16 @@ public class Main {
 
             boolean overwriteMetadataServiceUri = false;
             String sZkLedgersRootPath = "/ledgers";
-            if (cmdLine.hasOption('m')) {
-                sZkLedgersRootPath = cmdLine.getOptionValue('m');
+            if (cmdLine.hasOption("m")) {
+                sZkLedgersRootPath = cmdLine.getOptionValue("m");
                 log.info("Get cmdline zookeeper ledger path: {}", sZkLedgersRootPath);
                 overwriteMetadataServiceUri = true;
             }
 
 
             String sZK = conf.getZkServers();
-            if (cmdLine.hasOption('z')) {
-                sZK = cmdLine.getOptionValue('z');
+            if (cmdLine.hasOption("z")) {
+                sZK = cmdLine.getOptionValue("z");
                 log.info("Get cmdline zookeeper instance: {}", sZK);
                 overwriteMetadataServiceUri = true;
             }
@@ -166,21 +170,27 @@ public class Main {
                 log.info("Overwritten service uri to {}", metadataServiceUri);
             }
 
-            if (cmdLine.hasOption('p')) {
-                String sPort = cmdLine.getOptionValue('p');
+            if (cmdLine.hasOption("p")) {
+                String sPort = cmdLine.getOptionValue("p");
                 log.info("Get cmdline bookie port: {}", sPort);
                 Integer iPort = Integer.parseInt(sPort);
                 conf.setBookiePort(iPort.intValue());
             }
 
-            if (cmdLine.hasOption('j')) {
-                String sJournalDir = cmdLine.getOptionValue('j');
+            if (cmdLine.hasOption("bh")) {
+                String advertisedAddress = cmdLine.getOptionValue("bh");
+                log.info("Get cmdline bookie advertisedAddress: {}", advertisedAddress);
+                conf.setAdvertisedAddress(advertisedAddress);
+            }
+
+            if (cmdLine.hasOption("j")) {
+                String sJournalDir = cmdLine.getOptionValue("j");
                 log.info("Get cmdline journal dir: {}", sJournalDir);
                 conf.setJournalDirName(sJournalDir);
             }
 
-            if (cmdLine.hasOption('i')) {
-                String[] sIndexDirs = cmdLine.getOptionValues('i');
+            if (cmdLine.hasOption("i")) {
+                String[] sIndexDirs = cmdLine.getOptionValues("i");
                 log.info("Get cmdline index dirs: ");
                 for (String index : sIndexDirs) {
                     log.info("indexDir : {}", index);
@@ -188,8 +198,8 @@ public class Main {
                 conf.setIndexDirName(sIndexDirs);
             }
 
-            if (cmdLine.hasOption('l')) {
-                String[] sLedgerDirs = cmdLine.getOptionValues('l');
+            if (cmdLine.hasOption("l")) {
+                String[] sLedgerDirs = cmdLine.getOptionValues("l");
                 log.info("Get cmdline ledger dirs: ");
                 for (String ledger : sLedgerDirs) {
                     log.info("ledgerdir : {}", ledger);
@@ -220,16 +230,25 @@ public class Main {
             return ExitCode.INVALID_CONF;
         }
 
-        // 1. building the component stack:
+        BookieConfiguration bkConf = new BookieConfiguration(conf);
+        // 1. find no node in zk，run command: "bin/bookkeeper shell metaformat"
+        try {
+            autoMetaFormat(conf, bkConf);
+        } catch (Exception e) {
+            log.error("Failed to metaformat", e);
+            return ExitCode.SERVER_EXCEPTION;
+        }
+
+        // 2. building the component stack:
         LifecycleComponent server;
         try {
-            server = buildBookieServer(new BookieConfiguration(conf));
+            server = buildBookieServer(bkConf);
         } catch (Exception e) {
             log.error("Failed to build bookie server", e);
             return ExitCode.SERVER_EXCEPTION;
         }
 
-        // 2. start the server
+        // 3. start the server
         try {
             ComponentStarter.startComponent(server).get();
         } catch (InterruptedException ie) {
@@ -267,6 +286,44 @@ public class Main {
         return conf;
     }
 
+    private static void autoMetaFormat(ServerConfiguration conf, BookieConfiguration bkConf) throws Exception {
+        int INSTANCEID_TIMEOUT = 60 * 1000;
+        if (ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs())) {
+            ZKMetadataDriverBase.CreateLockStatus lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+            if (lock == ZKMetadataDriverBase.CreateLockStatus.created) {
+                doMetaFormat(conf, bkConf);
+            } else if (lock == ZKMetadataDriverBase.CreateLockStatus.existed) {
+                long start = System.currentTimeMillis();
+                long timeCost = System.currentTimeMillis() - start;
+                while (timeCost < INSTANCEID_TIMEOUT) {
+                    if (!ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs())) {
+                        log.info("metaformat is just now created by another bookie,skip it");
+                        return;
+                    }
+                    lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+                    if (lock == ZKMetadataDriverBase.CreateLockStatus.created && doMetaFormat(conf, bkConf)) {
+                        return;
+                    }
+                    Thread.sleep(50);
+                    timeCost = System.currentTimeMillis() - start;
+                }
+                throw new RuntimeException("Failed to metaformat,timeout: " +INSTANCEID_TIMEOUT+ " ms");
+            }
+        }
+    }
+
+    private static boolean doMetaFormat(ServerConfiguration conf, BookieConfiguration bkConf) throws Exception {
+        try {
+            int res = BookieShell.doMain(new String[]{"-conf", CONF_FILE, "metaformat","-nonInteractive","-force"});
+            if (res != 0) {
+                log.error("Failed to run metaformat,res={}", res);
+                throw new RuntimeException("Failed to run metaformat,res=" + res);
+            }
+        } finally {
+            ZKMetadataDriverBase.tryCleanInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+        }
+        return true;
+    }
     /**
      * Build the bookie server.
      *

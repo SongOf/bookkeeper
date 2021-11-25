@@ -2285,7 +2285,7 @@ public class BookieShell implements Tool {
         }
     }
 
-    public static void main(String[] argv) throws Exception {
+    public static int doMain(String[] argv) throws Exception {
         BookieShell shell = new BookieShell();
 
         // handle some common options for multiple cmds
@@ -2323,7 +2323,10 @@ public class BookieShell implements Tool {
         }
         LOG.debug("Using entry formatter {}", shell.entryFormatter.getClass());
 
-        int res = shell.run(cmdLine.getArgs());
+        return shell.run(cmdLine.getArgs());
+    }
+    public static void main(String[] argv) throws Exception {
+        int res = doMain(argv);
         System.exit(res);
     }
 

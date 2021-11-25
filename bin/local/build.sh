@@ -1,0 +1,1 @@
+ mvn clean package -T2C -Dmaven.test.skip=true

@@ -1,0 +1,1 @@
+ mvn clean deploy -T2C -Dmaven.test.skip=true

@@ -39,6 +39,13 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.bookkeeper.stats</groupId>
+      <artifactId>prometheus-metrics-provider</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.bookkeeper</groupId>
       <artifactId>stream-storage-server</artifactId>
       <version>${project.version}</version>
