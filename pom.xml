@@ -23,7 +23,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.bookkeeper</groupId>
-  <version>4.14.2</version>
+  <version>4.14.2-dop-SNAPSHOT</version>
   <artifactId>bookkeeper</artifactId>
   <packaging>pom</packaging>
   <name>Apache BookKeeper :: Parent</name>
@@ -199,6 +199,18 @@
     <servlet-api.version>4.0.0</servlet-api.version>
   </properties>
 
+  <distributionManagement>
+    <repository>
+      <id>central</id>
+      <name>artifactory-main-releases</name>
+      <url>http://artifactory.intra.xiaojukeji.com:80/artifactory/libs-release</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>artifactory-main-snapshots</name>
+      <url>http://artifactory.intra.xiaojukeji.com:80/artifactory/libs-snapshot</url>
+    </snapshotRepository>
+  </distributionManagement>
   <!-- dependency definitions -->
   <dependencyManagement>
     <dependencies>
@@ -869,7 +881,7 @@
           <source>${javac.target}</source>
           <target>${javac.target}</target>
           <compilerArgs>
-            <compilerArg>-Werror</compilerArg>
+            <!-- <compilerArg>-Werror</compilerArg> -->
             <compilerArg>-Xlint:deprecation</compilerArg>
             <compilerArg>-Xlint:unchecked</compilerArg>
             <!-- https://issues.apache.org/jira/browse/MCOMPILER-205 -->
