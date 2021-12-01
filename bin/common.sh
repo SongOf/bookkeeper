@@ -156,7 +156,7 @@ find_module_jar_at() {
   DIR=$1
   MODULE=$2
   #REGEX="^${MODULE}-[0-9\\.]*((-[a-zA-Z]*(-[0-9]*)?)|(-SNAPSHOT))?.jar$"
-  # add custom version: 4.14.2-***-SNAPSHOT, for example: 4.14.2-dop-SNAPSHOT
+  # add custom version: 4.14.2-***-SNAPSHOT, for example: 4.14.3-dop-SNAPSHOT
   REGEX="^${MODULE}-[0-9\\.]*.+((-[a-zA-Z]*(-[0-9]*)?)|(-SNAPSHOT))?.jar$"
   if [ -d ${DIR} ]; then
     cd ${DIR}
