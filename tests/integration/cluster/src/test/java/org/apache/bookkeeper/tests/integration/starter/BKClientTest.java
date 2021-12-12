@@ -13,7 +13,7 @@ import java.util.Enumeration;
 import org.apache.bookkeeper.client.AsyncCallback.OpenCallback;
 
 
-public class BKClientTest2 {
+public class BKClientTest {
     static ClientConfiguration cc = null;
     static BookKeeper bkc = null;
     static LedgerHandle lh = null;
