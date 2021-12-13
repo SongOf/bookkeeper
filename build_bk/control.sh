@@ -22,8 +22,16 @@ SERVICE="bookie"
 BOOKIE_HOME=$(cd $(dirname $0) && pwd -P)
 BOOKIE_PID_DIR=${BOOKIE_HOME}
 PIDFILE="${BOOKIE_PID_DIR}/bin/pulsar-${SERVICE}.pid"
-BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
-BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.xml
+
+# 本脚本 log 变量
+export BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
+# bin/bookkeeper的全局参量
+export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.yaml
+# bin/bookkeeper的全局参量
+export BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
+# bin/common.sh的全局参量
+export BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
+
 CONTROL_LOG="${BOOKIE_LOG_DIR}/control.log"
 CONSOLE_OUT_LOG="${BOOKIE_LOG_DIR}/console_out.log"
 BOOKIE_ROOT_LOGGER="INFO"
@@ -40,10 +48,6 @@ function start() {
     date >> ${CONSOLE_OUT_LOG}
     JDK_VERSION=`java -version 2>&1|grep "java version"|awk '{print $3}'`
     echo "JDK_VERSION: " $JDK_VERSION
-
-    #define default configs here.
-    BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
-    BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
     BOOKIE_GC="-XX:InitiatingHeapOccupancyPercent=70 -XX:G1HeapRegionSize=32m"
     BOOKIE_GC_LOG_FILE="${BOOKIE_LOG_DIR}/gc.log"
     BOOKIE_GC_LOG="-XX:+PrintGCDateStamps"
@@ -126,14 +130,6 @@ function start() {
     OPTS="$OPTS -Dlog4j2.is.webapp=false"
     OPTS="$OPTS ${BOOKIE_GC}"
 
-    # 本脚本 log 变量
-    export BOOKIE_LOG_DIR
-    # bin/bookkeeper的全局参量
-    export BOOKIE_LOG_CONF
-    # bin/bookkeeper的全局参量
-    export BOOKIE_CONF
-    # bin/common.sh的全局参量
-    export BOOKIE_MEM_OPTS
     # bin/bookkeeper的全局参量
     export OPTS
 
