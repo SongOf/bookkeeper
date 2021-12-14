@@ -157,13 +157,10 @@ function start() {
     if [ "$CGROUP_ENABLE" == "true" ];then
         CMD_PREFIX="cgexec -g cpu:pulsar-${SERVICE}"
     else
-        CMD_PREFIX=""
+        CMD_PREFIX="exec"
     fi
 
-    JSTAT_FILE=${BOOKIE_HOME}/logs/jstat.log
-    exec ${CMD_PREFIX} ${BOOKIE_HOME}/bin/bookkeeper bookie >> ${CONSOLE_OUT_LOG} 2>&1
-    echo "Start pulsar-${SERVICE} Failed"
-    echo "Start pulsar-${SERVICE} Failed" >> ${CONTROL_LOG}
+    ${CMD_PREFIX} ${BOOKIE_HOME}/bin/bookkeeper bookie >> ${CONSOLE_OUT_LOG} 2>&1
 }
 
 function stop() {
