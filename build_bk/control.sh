@@ -25,6 +25,7 @@ PIDFILE="${BOOKIE_PID_DIR}/bin/pulsar-${SERVICE}.pid"
 
 # 本脚本 log 变量
 export BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
+export BOOKIE_LOG_FILE="pulsar-bookie.log"
 # bin/bookkeeper的全局参量
 export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.yaml
 # bin/bookkeeper的全局参量
@@ -123,6 +124,7 @@ function start() {
     #Configure log configuration system properties
     OPTS="$OPTS -Dpulsar.log.appender=${BOOKIE_LOG_APPENDER}"
     OPTS="$OPTS -Dpulsar.log.dir=$BOOKIE_LOG_DIR"
+    OPTS="$OPTS -Dpulsar.log.file=$BOOKIE_LOG_FILE"
     OPTS="$OPTS -Dpulsar.log.level=$BOOKIE_ROOT_LOGGER"
     OPTS="$OPTS -Dpulsar.log.root.level=$BOOKIE_LOG_ROOT_LEVEL"
     OPTS="$OPTS -Dpulsar.routing.appender.default=$BOOKIE_ROUTING_APPENDER_DEFAULT"
