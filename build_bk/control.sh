@@ -28,6 +28,8 @@ export BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
 export BOOKIE_LOG_FILE="pulsar-bookie.log"
 # bin/bookkeeper的全局参量
 export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.yaml
+# bin/bookkeeper的全局参量
+export BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
 # bin/common.sh的全局参量
 export BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
 
@@ -102,7 +104,6 @@ function start() {
 
     # SERVICE_CLUSTER_NAME: e.g, gz01.cproxy-1.binlog.fd.rocketmq.fd.didi.com
     SERVICE_CLUSTER_NAME=${CLUSTER_NAME}"."${SERVICE_NAME}
-    BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
     if [[ $SERVICE_NAME == *"bookkeeper"*"iot"* ]]; then #处理iot场景的bookkeeper集群
         BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
         BOOKKEEPER_CONF_ENV="online"
