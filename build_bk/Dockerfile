@@ -21,6 +21,7 @@ FROM registry-v3.intra.xiaojukeji.com/didionline/dop-bookkeeper:stable
 
 COPY 899-logsymbol.required.sh  /etc/container/init/
 COPY 990-startservice.required.sh  /etc/container/init/
+COPY supervisor-bookkeeper.conf /etc/supervisord.d/
 
 ENV DEPLOY_DISF_NOT_NEED_START 1
 ENV DEPLOY_APOLLO_NOT_NEED_START 1
