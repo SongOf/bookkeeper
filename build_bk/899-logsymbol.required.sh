@@ -19,8 +19,11 @@
 #
 
 mkdir -p /home/xiaoju/data1/pulsar_bk/logs
+mkdir -p /home/xiaoju/data1/pulsar_bk/data
 rm -rf /home/xiaoju/pulsar_bk/logs
 ln -s /home/xiaoju/data1/pulsar_bk/logs /home/xiaoju/pulsar_bk/logs
+rm -rf /home/xiaoju/pulsar_bk/data
+ln -s /home/xiaoju/data1/pulsar_bk/data /home/xiaoju/pulsar_bk/data
 
 chown -R xiaoju.xiaoju /home/xiaoju/pulsar_bk
 chown -R xiaoju.xiaoju /home/xiaoju/data1

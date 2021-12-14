@@ -28,8 +28,6 @@ export BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
 export BOOKIE_LOG_FILE="pulsar-bookie.log"
 # bin/bookkeeper的全局参量
 export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.yaml
-# bin/bookkeeper的全局参量
-export BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
 # bin/common.sh的全局参量
 export BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
 
@@ -58,6 +56,23 @@ function start() {
     fi
     BOOKIE_GC="${BOOKIE_GC} ${BOOKIE_GC_LOG}"
 
+    #docker machine flag,if it's a docker machine, get real memory and set the flag 1
+    DOCKER_MACHINE=0
+    #docker machine memory
+    DOCKER_MEM=4096
+    if [[ $HOSTNAME && $HOSTNAME =~ docker && $DIDIENV_ODIN_INSTANCE_QUOTA_MEM && $DIDIENV_ODIN_INSTANCE_TYPE && $DIDIENV_ODIN_INSTANCE_TYPE == "dd_docker" ]];then
+	    DOCKER_MACHINE=1
+	    DOCKER_MEM=$DIDIENV_ODIN_INSTANCE_QUOTA_MEM
+	    echo "deploy machine is docker container,hostname=$HOSTNAME||memory=$DOCKER_MEM mb"
+    fi
+
+   #for docker machine, change default memory limit
+    if ((DOCKER_MACHINE==1));then
+  	    HEAP_SIZE=$((DOCKER_MEM*4/10))
+        DIRECT_MEMORY_SIZE=$((DOCKER_MEM*4/10))
+   	    BOOKIE_MEM_OPTS="-Xms${HEAP_SIZE}m -Xmx${HEAP_SIZE}m -XX:MaxDirectMemorySize=${DIRECT_MEMORY_SIZE}m"
+    fi
+
     # SERVICE_NAME: e.g, cproxy-1.binlog.fd.rocketmq.fd.didi.com
     SERVICE_NAME="test"
     if [ -f "${BOOKIE_HOME}/.deploy/service.service_name.txt" ]; then
@@ -76,8 +91,48 @@ function start() {
 
     # SERVICE_CLUSTER_NAME: e.g, gz01.cproxy-1.binlog.fd.rocketmq.fd.didi.com
     SERVICE_CLUSTER_NAME=${CLUSTER_NAME}"."${SERVICE_NAME}
-
-    if [[ ${SERVICE_NAME} == preview.preview-bookkeeper.dop.ddmq.didi.com ]]; then
+    BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
+    if [[ $SERVICE_NAME == *"bookkeeper"*"iot"* ]]; then #处理iot场景的bookkeeper集群
+        BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
+        BOOKKEEPER_CONF_ENV="online"
+        case "$SERVICE_NAME" in
+            *test*)
+                BOOKKEEPER_CONF_ENV="test"
+            ;;
+            *preview*)
+                BOOKKEEPER_CONF_ENV="preview"
+            ;;
+            *public*)
+                if [[ $CLUSTER_NAME && $CLUSTER_NAME =~ "us01" ]]; then
+                  BOOKKEEPER_CONF_CLUSTER="us01-public"
+                else
+                  BOOKKEEPER_CONF_CLUSTER="public"
+                fi
+            ;;
+            *car*)
+                BOOKKEEPER_CONF_CLUSTER="car"
+            ;;
+            *bike*)
+                BOOKKEEPER_CONF_CLUSTER="bike"
+            ;;
+            *mqtt-bike*)
+                BOOKKEEPER_CONF_CLUSTER="mqtt-bike"
+            ;;
+        esac
+        #判断iot的bk集群是否带有编号，如public-0.public.bookkeeper.iot.ddmq.didi.com，表示iot public集群的0号bookkeeper集群，需要使用0号对应的配置
+        SERVICE_NAME_PREFIX=${SERVICE_NAME%%.*}
+        SERVIVE_NAME_NUM=${SERVICE_NAME_PREFIX##*-}
+        IS_NUMBER=`echo $SERVIVE_NAME_NUM|sed 's/[0-9]//g'`
+        if [ -z $IS_NUMBER ];then
+            if [ $BOOKKEEPER_CONF_CLUSTER ]; then
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_CLUSTER-$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
+            else
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
+            fi
+        else
+            BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/bookkeeper.conf"
+        fi
+    elif [[ ${SERVICE_NAME} == preview.preview-bookkeeper.dop.ddmq.didi.com ]]; then
       BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.conf"
     elif [[ ${SERVICE_NAME} == level1.bookkeeper.dop.ddmq.didi.com ]]; then
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
@@ -87,23 +142,6 @@ function start() {
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.conf"
     elif [[ ${SERVICE_NAME} == perf.bookkeeper.dop.ddmq.didi.com ]]; then
       BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf"
-    fi
-
-    #docker machine flag,if it's a docker machine, get real memory and set the flag 1
-    DOCKER_MACHINE=0
-    #docker machine memory
-    DOCKER_MEM=4096
-    if [[ $HOSTNAME && $HOSTNAME =~ docker && $DIDIENV_ODIN_INSTANCE_QUOTA_MEM && $DIDIENV_ODIN_INSTANCE_TYPE && $DIDIENV_ODIN_INSTANCE_TYPE == "dd_docker" ]];then
-	    DOCKER_MACHINE=1
-	    DOCKER_MEM=$DIDIENV_ODIN_INSTANCE_QUOTA_MEM
-	    echo "deploy machine is docker container,hostname=$HOSTNAME||memory=$DOCKER_MEM mb"
-    fi
-
-   #for docker machine, change default memory limit
-    if ((DOCKER_MACHINE==1));then
-  	    HEAP_SIZE=$((DOCKER_MEM*4/10))
-        DIRECT_MEMORY_SIZE=$((DOCKER_MEM*4/10))
-   	    BOOKIE_MEM_OPTS="-Xms${HEAP_SIZE}m -Xmx${HEAP_SIZE}m -XX:MaxDirectMemorySize=${DIRECT_MEMORY_SIZE}m"
     fi
 
     # log directory & file
@@ -130,7 +168,9 @@ function start() {
     OPTS="$OPTS -Dpulsar.routing.appender.default=$BOOKIE_ROUTING_APPENDER_DEFAULT"
     # Configure log4j2 to disable servlet webapp detection so that Garbage free logging can be used
     OPTS="$OPTS -Dlog4j2.is.webapp=false"
-    OPTS="$OPTS ${BOOKIE_GC}"
+    JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9011 -Dcom.sun.management.jmxremote.local.only=false
+              -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+    OPTS="$OPTS ${BOOKIE_GC} ${JMX_OPTS}"
 
     # bin/bookkeeper的全局参量
     export OPTS
@@ -149,7 +189,6 @@ function start() {
         CMD_PREFIX=""
     fi
 
-    JSTAT_FILE=${BOOKIE_HOME}/logs/jstat.log
     nohup ${CMD_PREFIX} bin/bookkeeper bookie >> ${CONSOLE_OUT_LOG} 2>&1 &
 
     #不能太小，否则判断状态有误
@@ -161,7 +200,6 @@ function start() {
     if [ $? -ne 0 ]; then
         echo "New pulsar-${SERVICE} is running, pid=$pid"
         echo "New pulsar-${SERVICE} is running, pid=$pid" >> ${CONTROL_LOG}
-        jstat -gcutil -t $pid 30s >> ${JSTAT_FILE} 2>&1 &
 	    #remove old deploy folder
     else
         echo "Start pulsar-${SERVICE} Failed"
@@ -175,7 +213,6 @@ function stop() {
     check_pid
     if [ $? -ne 0 ]; then
         echo "Killing pulsar-${SERVICE} =$pid" >> ${CONTROL_LOG}
-        pkill -f "jstat -gcutil -t $pid 30s"
         pkill -f hangAlarm.sh
         kill ${pid}
     else
