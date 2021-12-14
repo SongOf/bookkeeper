@@ -18,4 +18,4 @@
 # under the License.
 #
 
-su - xiaoju -c "cd /home/xiaoju/pulsar_bk && sh control.sh start"
+supervisorctl start bookkeeper
