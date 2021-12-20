@@ -65,7 +65,7 @@ function start() {
     BOOKIE_GC_LOG="-XX:+PrintGCDateStamps"
 
     if [[ "$JDK_VERSION" =~ ^\"11.0 ]]; then
-          BOOKIE_GC_LOG="-Xlog:gc*:file=${BOOKIE_GC_LOG_FILE}:time,tid,pid,tags:filecount=5,filesize=512m"
+          BOOKIE_GC_LOG="-Xlog:gc*,safepoint:file=${BOOKIE_GC_LOG_FILE}:time,tid,pid,tags:filecount=5,filesize=512m"
     fi
     BOOKIE_GC="${BOOKIE_GC} ${BOOKIE_GC_LOG}"
 
@@ -164,7 +164,6 @@ function start() {
     BOOKIE_ROUTING_APPENDER_DEFAULT=${BOOKIE_ROUTING_APPENDER_DEFAULT:-"Console"}
 
     # OPTS values
-    OPTS="$OPTS -Dlog4j.configurationFile=`basename $BOOKIE_LOG_CONF`"
     # Ensure we can read bigger content from ZK. (It might be
     # rarely needed when trying to list many z-nodes under a
     # directory)
@@ -172,6 +171,14 @@ function start() {
     # Allow Netty to use reflection access
     OPTS="$OPTS -Dio.netty.tryReflectionSetAccessible=true"
     #Configure log configuration system properties
+    LOG_OPTS="-Dlog4j.configurationFile=`basename $BOOKIE_LOG_CONF`
+             -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
+             -DAsyncLoggerConfig.RingBufferSize=262144
+             -Dlog4j2.AsyncQueueFullPolicy=Discard
+             -Dlog4j2.DiscardThreshold=ERROR
+             -Dlog4j2.formatMsgNoLookups=true "
+
+    OPTS="$OPTS $LOG_OPTS"
     OPTS="$OPTS -Dpulsar.log.appender=${BOOKIE_LOG_APPENDER}"
     OPTS="$OPTS -Dpulsar.log.dir=$BOOKIE_LOG_DIR"
     OPTS="$OPTS -Dpulsar.log.file=$BOOKIE_LOG_FILE"

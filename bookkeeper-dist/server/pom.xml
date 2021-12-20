@@ -35,7 +35,7 @@
     <jackson.version>2.12.3</jackson.version>
     <prometheus.version>0.5.0</prometheus.version>
     <disruptor.version>3.4.0</disruptor.version>
-    <log4j2.version>2.14.0</log4j2.version>
+    <log4j2.version>2.17.0</log4j2.version>
     <dist.slf4j.version>1.7.25</dist.slf4j.version>
   </properties>
 
