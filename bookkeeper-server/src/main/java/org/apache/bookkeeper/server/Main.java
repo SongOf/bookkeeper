@@ -288,19 +288,19 @@ public class Main {
 
     private static void autoMetaFormat(ServerConfiguration conf, BookieConfiguration bkConf) throws Exception {
         int INSTANCEID_TIMEOUT = 60 * 1000;
-        if (ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs())) {
-            ZKMetadataDriverBase.CreateLockStatus lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+        if (ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs(), conf.getZkRetryBackoffMaxRetries())) {
+            ZKMetadataDriverBase.CreateLockStatus lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs(), conf.getZkRetryBackoffMaxRetries());
             if (lock == ZKMetadataDriverBase.CreateLockStatus.created) {
                 doMetaFormat(conf, bkConf);
             } else if (lock == ZKMetadataDriverBase.CreateLockStatus.existed) {
                 long start = System.currentTimeMillis();
                 long timeCost = System.currentTimeMillis() - start;
                 while (timeCost < INSTANCEID_TIMEOUT) {
-                    if (!ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs())) {
+                    if (!ZKMetadataDriverBase.needMetaformat(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs(), conf.getZkRetryBackoffMaxRetries())) {
                         log.info("metaformat is just now created by another bookie,skip it");
                         return;
                     }
-                    lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+                    lock = ZKMetadataDriverBase.tryCreateInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs(), conf.getZkRetryBackoffMaxRetries());
                     if (lock == ZKMetadataDriverBase.CreateLockStatus.created && doMetaFormat(conf, bkConf)) {
                         return;
                     }
@@ -320,7 +320,7 @@ public class Main {
                 throw new RuntimeException("Failed to run metaformat,res=" + res);
             }
         } finally {
-            ZKMetadataDriverBase.tryCleanInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs());
+            ZKMetadataDriverBase.tryCleanInstanceLock(bkConf.getServerConf(), conf.getZkRetryBackoffStartMs(), conf.getZkRetryBackoffMaxMs(), conf.getZkRetryBackoffMaxRetries());
         }
         return true;
     }
