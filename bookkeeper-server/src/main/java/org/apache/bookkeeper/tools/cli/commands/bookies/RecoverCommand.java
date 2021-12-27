@@ -100,6 +100,9 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
 
         @Parameter(names = { "-bs", "--bokiesrc" }, description = "Bookie address")
         private String bookieAddress;
+
+        @Parameter(names = {"-skbs", "--skipRemoveBookieStatus"}, description = "Skip remove Bookie Status")
+        private boolean skipRemoveBookieStatus;
     }
 
     @Override
@@ -118,12 +121,14 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
         boolean force = flags.force;
         boolean skipOpenLedgers = flags.skipOpenLedgers;
         boolean removeCookies = !dryrun && flags.deleteCookie;
+        boolean skipRemoveBookieStatus = flags.skipRemoveBookieStatus;
 
         Long ledgerId = flags.ledger;
 
         // Get bookies list
         final String[] bookieStrs = flags.bookieAddress.split(",");
         final Set<BookieId> bookieAddrs = new HashSet<>();
+        Set<BookieId> skipStatusRemoveBookies = null;
         for (String bookieStr : bookieStrs) {
             try {
                 bookieAddrs.add(BookieId.parse(bookieStr));
@@ -142,6 +147,9 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
             }
         }
 
+        if(skipRemoveBookieStatus){
+            skipStatusRemoveBookies = bookieAddrs;
+        }
         LOG.info("Constructing admin");
         ClientConfiguration adminConf = new ClientConfiguration(conf);
         BookKeeperAdmin admin = new BookKeeperAdmin(adminConf);
@@ -153,7 +161,7 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
             if (DEFAULT_ID != ledgerId) {
                 return bkRecoveryLedger(admin, ledgerId, bookieAddrs, dryrun, skipOpenLedgers, removeCookies);
             }
-            return bkRecovery(admin, bookieAddrs, dryrun, skipOpenLedgers, removeCookies);
+            return bkRecovery(admin, bookieAddrs, dryrun, skipOpenLedgers, removeCookies, skipStatusRemoveBookies);
         } finally {
             admin.close();
         }
@@ -259,9 +267,10 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
                            Set<BookieId> bookieAddrs,
                            boolean dryrun,
                            boolean skipOpenLedgers,
-                           boolean removeCookies)
+                           boolean removeCookies,
+                           Set<BookieId> skipStatusRemoveBookies)
         throws InterruptedException, BKException {
-        bkAdmin.recoverBookieData(bookieAddrs, dryrun, skipOpenLedgers);
+        bkAdmin.recoverBookieData(bookieAddrs, dryrun, skipOpenLedgers, skipStatusRemoveBookies);
         if (removeCookies) {
             deleteCookies(bkAdmin.getConf(), bookieAddrs);
         }
