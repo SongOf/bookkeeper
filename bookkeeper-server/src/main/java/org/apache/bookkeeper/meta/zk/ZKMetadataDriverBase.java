@@ -158,9 +158,9 @@ public class ZKMetadataDriverBase implements AutoCloseable {
     /**
      * check cluster if need metaformat in the first time.
      * */
-    public static boolean needMetaformat(AbstractConfiguration<?> conf,int zkRetryBackoffStartMs,int zkRetryBackoffMaxMs) {
+    public static boolean needMetaformat(AbstractConfiguration<?> conf, int zkRetryBackoffStartMs, int zkRetryBackoffMaxMs, int zkRetryBackoffMaxRetries) {
         try {
-            RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, Integer.MAX_VALUE);
+            RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, zkRetryBackoffMaxRetries);
             final String metadataServiceUriStr;
             metadataServiceUriStr = conf.getMetadataServiceUri();
             URI metadataServiceUri = URI.create(metadataServiceUriStr);
@@ -190,10 +190,10 @@ public class ZKMetadataDriverBase implements AutoCloseable {
     /**
      * try to create a lock in zk
      * */
-    public static CreateLockStatus tryCreateInstanceLock(AbstractConfiguration<?> conf,int zkRetryBackoffStartMs,int zkRetryBackoffMaxMs) throws Exception {
+    public static CreateLockStatus tryCreateInstanceLock(AbstractConfiguration<?> conf, int zkRetryBackoffStartMs, int zkRetryBackoffMaxMs, int zkRetryBackoffMaxRetries) throws Exception {
         String instanceLockPath = null;
         try {
-            RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, Integer.MAX_VALUE);
+            RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, zkRetryBackoffMaxRetries);
             final String metadataServiceUriStr;
             metadataServiceUriStr = conf.getMetadataServiceUri();
             URI metadataServiceUri = URI.create(metadataServiceUriStr);
@@ -230,9 +230,9 @@ public class ZKMetadataDriverBase implements AutoCloseable {
     /**
      * try to create a lock in zk
      * */
-    public static void tryCleanInstanceLock(AbstractConfiguration<?> conf,int zkRetryBackoffStartMs,int zkRetryBackoffMaxMs) throws Exception {
+    public static void tryCleanInstanceLock(AbstractConfiguration<?> conf, int zkRetryBackoffStartMs, int zkRetryBackoffMaxMs, int zkRetryBackoffMaxRetries) throws Exception {
         String instanceLockPath = null;
-        RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, Integer.MAX_VALUE);
+        RetryPolicy zkRetryPolicy = new BoundExponentialBackoffRetryPolicy(zkRetryBackoffStartMs, zkRetryBackoffMaxMs, zkRetryBackoffMaxRetries);
         final String metadataServiceUriStr;
         metadataServiceUriStr = conf.getMetadataServiceUri();
         URI metadataServiceUri = URI.create(metadataServiceUriStr);

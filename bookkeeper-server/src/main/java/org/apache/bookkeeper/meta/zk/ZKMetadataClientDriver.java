@@ -61,13 +61,13 @@ public class ZKMetadataClientDriver
                                                         Optional<Object> optionalCtx)
             throws MetadataException {
         super.initialize(
-            conf,
-            statsLogger,
-            new BoundExponentialBackoffRetryPolicy(
-                conf.getZkTimeout(),
-                conf.getZkTimeout(),
-                0),
-            optionalCtx);
+                conf,
+                statsLogger,
+                new BoundExponentialBackoffRetryPolicy(
+                        conf.getZkTimeout(),
+                        conf.getZkTimeout(),
+                        conf.getZkRetryBackoffMaxRetries()),
+                optionalCtx);
         this.statsLogger = statsLogger;
         this.clientConf = conf;
         this.scheduler = scheduler;
