@@ -171,7 +171,8 @@ class PendingReadLacOp implements ReadLacCallback {
         }
 
         if (numResponsesPending == 0 && !completed) {
-            LOG.info("While readLac ledger: " + ledgerId + " did not hear success responses from all of ensemble");
+            LOG.error("While readLac ledger: " + ledgerId + " did not hear success responses from " +
+                    "all of ensemble, coverageSet={}", coverageSet);
             cb.getLacComplete(lastSeenError, maxLac);
         }
     }

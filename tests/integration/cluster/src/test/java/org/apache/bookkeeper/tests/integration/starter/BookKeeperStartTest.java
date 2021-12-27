@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 @Slf4j
 public class BookKeeperStartTest {
-    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/bookkeeper-commandUpdate";
+    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/bookkeeper";
 
     @Test
     public void testLocal() {
