@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 @Slf4j
 public class BookKeeperStartTest {
-    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/pulsar_all/bookkeeper";
+    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/bookkeeper-commandUpdate";
 
     @Test
     public void testLocal() {
@@ -58,7 +58,7 @@ public class BookKeeperStartTest {
 
     @Test
     public void testMultiCluster2() throws Exception {
-        String[] args2 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc2.conf"};
+        String[] args2 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc2.conf", "-bh", "localhost"};
         Main.main(args2);
         System.out.println("bk2 started...");
     }
@@ -66,16 +66,40 @@ public class BookKeeperStartTest {
     @Test
     public void testMultiCluster3() throws Exception {
 
-        String[] args3 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc3.conf"};
+        String[] args3 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc3.conf", "-bh", "localhost"};
         Main.main(args3);
         System.out.println("bk3 started...");
+    }
+
+    @Test
+    public void testMultiCluster4() throws Exception {
+
+        String[] args4 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc4.conf", "-bh", "localhost"};
+        Main.main(args4);
+        System.out.println("bk4 started...");
+    }
+
+    @Test
+    public void testMultiCluster5() throws Exception {
+
+        String[] args5 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc5.conf", "-bh", "localhost"};
+        Main.main(args5);
+        System.out.println("bk5 started...");
+    }
+
+    @Test
+    public void testMultiCluster6() throws Exception {
+
+        String[] args6 = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc6.conf", "-bh", "localhost"};
+        Main.main(args6);
+        System.out.println("bk6 started...");
     }
 
     @Test
     public void testCluster() throws Exception {
 //        startZK();
 //        String[] args = new String[]{"--conf", BK_HOME + "/conf/bookkeeper_lc.conf"};
-        String[] args = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc1.conf"};
+        String[] args = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc1.conf", "-bh", "localhost"};
         Main.main(args);
 //        stopZK();
     }
