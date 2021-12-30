@@ -17,7 +17,8 @@ import java.io.IOException;
  */
 @Slf4j
 public class BookKeeperStartTest {
-    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/bookkeeper";
+
+    public final static String BK_HOME = "/Users/lushiji-dd-mac/idea_projects/pulsar_all/bookkeeper";
 
     @Test
     public void testLocal() {
@@ -98,7 +99,6 @@ public class BookKeeperStartTest {
     @Test
     public void testCluster() throws Exception {
 //        startZK();
-//        String[] args = new String[]{"--conf", BK_HOME + "/conf/bookkeeper_lc.conf"};
         String[] args = new String[]{"--conf", BK_HOME + "/conf/local/bookkeeper_lc1.conf", "-bh", "localhost"};
         Main.main(args);
 //        stopZK();
