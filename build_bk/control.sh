@@ -27,7 +27,7 @@ PIDFILE="${BOOKIE_PID_DIR}/bin/pulsar-${SERVICE}.pid"
 export BOOKIE_LOG_DIR="${BOOKIE_HOME}/logs"
 export BOOKIE_LOG_FILE="pulsar-bookie.log"
 # bin/bookkeeper的全局参量
-export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.yaml
+export BOOKIE_LOG_CONF=${BOOKIE_HOME}/conf/log4j2.xml
 # bin/bookkeeper的全局参量
 export BOOKIE_CONF="${BOOKIE_HOME}/conf/bookkeeper.conf"
 # bin/common.sh的全局参量
@@ -37,6 +37,19 @@ CONTROL_LOG="${BOOKIE_LOG_DIR}/control.log"
 CONSOLE_OUT_LOG="${BOOKIE_LOG_DIR}/console_out.log"
 BOOKIE_ROOT_LOGGER="INFO"
 CGROUP_ENABLE="false"
+
+# log store config
+export LOG_BASE_DIR="logs/old"
+export THRESHOLD=30
+export SAVE_RATIO=10
+export SIZE_PER_LOG=512MB
+export LOG_BATCH_LEVEL=INFO
+export PULSAR_LOG_LEVEL=INFO
+export DOP_LOG_LEVEL=INFO
+
+#change USER_DIR to the parent of real path of LOG_BASE_DIR
+REAL_PATH_LOG_BASE_DIR=$(readlink -f "${LOG_BASE_DIR}")
+export USER_DIR=$(dirname "${REAL_PATH_LOG_BASE_DIR}")
 
 # Check for the java to use
 if [[ -z $JAVA_HOME ]]; then
@@ -60,9 +73,10 @@ function start() {
     date >> ${CONSOLE_OUT_LOG}
     JDK_VERSION=`${JAVA} -version 2>&1|grep "java version"|awk '{print $3}'`
     echo "JDK_VERSION: " $JDK_VERSION
-    BOOKIE_GC="-XX:InitiatingHeapOccupancyPercent=70 -XX:G1HeapRegionSize=32m"
+    # define pulsar gc here
+    BOOKIE_GC="-XX:+ParallelRefProcEnabled -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:InitiatingHeapOccupancyPercent=40 -XX:G1HeapRegionSize=32m -XX:+PreserveFramePointer -XX:-UseBiasedLocking -XX:-OmitStackTraceInFastThrow"
     BOOKIE_GC_LOG_FILE="${BOOKIE_LOG_DIR}/gc.log"
-    BOOKIE_GC_LOG="-XX:+PrintGCDateStamps"
+    BOOKIE_GC_LOG="-XX:+PrintGCApplicationStoppedTime -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${BOOKIE_GC_LOG_FILE} -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=512m"
 
     if [[ "$JDK_VERSION" =~ ^\"11.0 ]]; then
           BOOKIE_GC_LOG="-Xlog:gc*,safepoint:file=${BOOKIE_GC_LOG_FILE}:time,tid,pid,tags:filecount=5,filesize=512m"
@@ -179,6 +193,7 @@ function start() {
              -Dlog4j2.formatMsgNoLookups=true "
 
     OPTS="$OPTS $LOG_OPTS"
+    OPTS="$OPTS -Dio.netty.leakDetection.level=SIMPLE"
     OPTS="$OPTS -Dpulsar.log.appender=${BOOKIE_LOG_APPENDER}"
     OPTS="$OPTS -Dpulsar.log.dir=$BOOKIE_LOG_DIR"
     OPTS="$OPTS -Dpulsar.log.file=$BOOKIE_LOG_FILE"
@@ -187,6 +202,9 @@ function start() {
     OPTS="$OPTS -Dpulsar.routing.appender.default=$BOOKIE_ROUTING_APPENDER_DEFAULT"
     # Configure log4j2 to disable servlet webapp detection so that Garbage free logging can be used
     OPTS="$OPTS -Dlog4j2.is.webapp=false"
+    if [[ "$JDK_VERSION" =~ ^\"11.0 ]]; then
+          OPTS="$OPTS --illegal-access=permit"
+    fi
     JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9011 -Dcom.sun.management.jmxremote.local.only=false
               -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
     OPTS="$OPTS ${BOOKIE_GC} ${JMX_OPTS}"

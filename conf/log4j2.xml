@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" name="carrera" monitorInterval="60" shutdownHook="disable">
+    <Properties>
+        <Property name="userDir" value="${env:USER_DIR}"/>
+        <Property name="threshold" value="${env:THRESHOLD}"/>
+        <Property name="saveRatio" value="${env:SAVE_RATIO}"/>
+    </Properties>
+
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ABSOLUTE} %5p %c{1}:%L - %m%n"/>
+        </Console>
+        <RollingRandomAccessFile name="CarreraAppender" fileName="logs/carrera.log"
+                     filePattern="logs/old/carrera.log-%d{yyyy-MM-dd-HH}.%i">
+            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000">
+                <Delete basePath="${env:LOG_BASE_DIR}" maxDepth="3" followLinks="true">
+                    <ScriptCondition>
+                        <Script name="black technology" language="groovy"><![CDATA[
+                            def time = new Random().nextInt(3000)
+                            statusLogger.warn "[BT] start work. random sleep " + time + " milliseconds"
+                            sleep(time)
+
+                            def ret = []
+                            def threshold = Double.valueOf("${threshold}") / 100
+                            def saveRatio = Double.valueOf("${saveRatio}") / 100
+
+                            File userDir = new File('${userDir}')
+                            long diskCapacity = userDir.getTotalSpace()
+                            long diskUsed = diskCapacity - userDir.getUsableSpace()
+
+                            statusLogger.warn "[BT] params: threshold:" + threshold + " saveRatio:" + saveRatio + " userDir:" + "${userDir}"
+
+                            if (diskCapacity == 0) return ret
+
+                            double ratio = diskUsed * 1.0 / diskCapacity
+                            statusLogger.warn "[BT] ratio:" + ratio + " diskUsed:" + diskUsed + " diskCapacity:" + diskCapacity
+                            if (ratio <= threshold) return ret
+
+                            if (pathList.size() == 0) return ret
+
+                            double logRatio = -1
+                            long size = 0
+                            for (def pa : pathList)
+                                size += pa.attributes.size()
+                            logRatio = size * 1.0 / diskCapacity
+                            statusLogger.warn "[BT] before clean log file ratio: " + logRatio + ", size:" + size
+
+                            while (true) {
+                                size = 0
+                                for (def pa : pathList)
+                                    size += pa.attributes.size()
+                                logRatio = size * 1.0 / diskCapacity
+
+                                if (logRatio <= saveRatio) break
+
+                                //select a logDelete file.
+                                if (pathList.size() == 0) break
+                                def needDeletedFile = pathList.get(pathList.size() - 1)
+
+                                if ((size - needDeletedFile.attributes.size()) * 1.0 / diskCapacity >= saveRatio) {
+                                    if ((diskUsed - needDeletedFile.attributes.size()) * 1.0 / diskCapacity >= threshold) {
+                                        ret.add(pathList.remove(pathList.size() - 1))
+                                        diskUsed -= needDeletedFile.attributes.size()
+                                        continue
+                                    }
+                                }
+                                break
+                            }
+                            size = 0
+                            for (def pa : pathList)
+                                size += pa.attributes.size()
+                            logRatio = size * 1.0 / diskCapacity
+
+                            statusLogger.warn "[BT] after clean log file ratio: " + logRatio + ", deleted files: " + ret + ", size:" + size
+                            return ret]]>
+                        </Script>
+                    </ScriptCondition>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="WarnAppender" fileName="logs/error.log"
+                     filePattern="logs/old/error.log-%d{yyyy-MM-dd-HH}.%i">
+            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000"/>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="MetricAppender" fileName="logs/metric.log"
+                     filePattern="logs/old/metric.log-%d{yyyy-MM-dd-HH}.%i">
+            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000"/>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="MainAppender" fileName="logs/main.log"
+                     filePattern="logs/old/main.log-%d{yyyy-MM-dd-HH}.%i">
+            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000"/>
+        </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="PulsarBookieAppender" fileName="logs/pulsar-bookie.log"
+                                 filePattern="logs/old/pulsar-bookie.log-%d{yyyy-MM-dd-HH}.%i">
+            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000"/>
+        </RollingRandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <Root level="WARN">
+            <AppenderRef ref="CarreraAppender"/>
+            <AppenderRef ref="WarnAppender"/>
+        </Root>
+        <Logger name="org.apache.pulsar" additivity="false" level="${env:PULSAR_LOG_LEVEL}">
+            <AppenderRef ref="PulsarBookieAppender"/>
+            <AppenderRef ref="WarnAppender" level="error"/>
+        </Logger>
+        <Logger name="org.apache.bookkeeper" additivity="false" level="${env:PULSAR_LOG_LEVEL}">
+            <AppenderRef ref="PulsarBookieAppender"/>
+            <AppenderRef ref="WarnAppender" level="error"/>
+        </Logger>
+
+        <Logger name="io.netty.handler.logging" additivity="false" level="INFO">
+            <AppenderRef ref="MainAppender"/>
+        </Logger>
+        <Logger name="MainLogger" level="INFO" additivity="false">
+            <AppenderRef ref="MainAppender"/>
+            <AppenderRef ref="WarnAppender" level="error"/>
+        </Logger>
+    </Loggers>
+</Configuration>
