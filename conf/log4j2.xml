@@ -83,8 +83,8 @@
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="WarnAppender" fileName="logs/error.log"
-                     filePattern="logs/old/error.log-%d{yyyy-MM-dd-HH}.%i">
+        <RollingRandomAccessFile name="WarnAppender" fileName="logs/warn.log"
+                     filePattern="logs/old/warn.log-%d{yyyy-MM-dd-HH}.%i">
             <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
@@ -92,17 +92,8 @@
             </Policies>
             <DefaultRolloverStrategy max="1000"/>
         </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="MetricAppender" fileName="logs/metric.log"
-                     filePattern="logs/old/metric.log-%d{yyyy-MM-dd-HH}.%i">
-            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
-                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1000"/>
-        </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="MainAppender" fileName="logs/main.log"
-                     filePattern="logs/old/main.log-%d{yyyy-MM-dd-HH}.%i">
+        <RollingRandomAccessFile name="ErrorAppender" fileName="logs/error.log"
+                                 filePattern="logs/old/error.log-%d{yyyy-MM-dd-HH}.%i">
             <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
@@ -121,25 +112,14 @@
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
-        <Root level="WARN">
+        <Root level="${env:BK_LOG_LEVEL}">
             <AppenderRef ref="CarreraAppender"/>
-            <AppenderRef ref="WarnAppender"/>
         </Root>
-        <Logger name="org.apache.pulsar" additivity="false" level="${env:PULSAR_LOG_LEVEL}">
+        
+        <Logger name="org.apache.bookkeeper" additivity="false" level="${env:BK_LOG_LEVEL}">
             <AppenderRef ref="PulsarBookieAppender"/>
-            <AppenderRef ref="WarnAppender" level="error"/>
-        </Logger>
-        <Logger name="org.apache.bookkeeper" additivity="false" level="${env:PULSAR_LOG_LEVEL}">
-            <AppenderRef ref="PulsarBookieAppender"/>
-            <AppenderRef ref="WarnAppender" level="error"/>
-        </Logger>
-
-        <Logger name="io.netty.handler.logging" additivity="false" level="INFO">
-            <AppenderRef ref="MainAppender"/>
-        </Logger>
-        <Logger name="MainLogger" level="INFO" additivity="false">
-            <AppenderRef ref="MainAppender"/>
-            <AppenderRef ref="WarnAppender" level="error"/>
+            <AppenderRef ref="ErrorAppender" level="error"/>
+            <AppenderRef ref="WarnAppender" level="warn"/>
         </Logger>
     </Loggers>
 </Configuration>

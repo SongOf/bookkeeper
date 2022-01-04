@@ -43,9 +43,7 @@ export LOG_BASE_DIR="logs/old"
 export THRESHOLD=30
 export SAVE_RATIO=10
 export SIZE_PER_LOG=512MB
-export LOG_BATCH_LEVEL=INFO
-export PULSAR_LOG_LEVEL=INFO
-export DOP_LOG_LEVEL=INFO
+export BK_LOG_LEVEL=INFO
 
 #change USER_DIR to the parent of real path of LOG_BASE_DIR
 REAL_PATH_LOG_BASE_DIR=$(readlink -f "${LOG_BASE_DIR}")
