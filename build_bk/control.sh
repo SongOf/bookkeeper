@@ -191,7 +191,7 @@ function start() {
              -Dlog4j2.formatMsgNoLookups=true "
 
     OPTS="$OPTS $LOG_OPTS"
-    OPTS="$OPTS -Dio.netty.leakDetection.level=SIMPLE"
+    OPTS="$OPTS -Dio.netty.leakDetection.level=DISABLED"
     OPTS="$OPTS -Dpulsar.log.appender=${BOOKIE_LOG_APPENDER}"
     OPTS="$OPTS -Dpulsar.log.dir=$BOOKIE_LOG_DIR"
     OPTS="$OPTS -Dpulsar.log.file=$BOOKIE_LOG_FILE"

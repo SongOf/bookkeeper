@@ -83,17 +83,8 @@
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="WarnAppender" fileName="logs/warn.log"
-                     filePattern="logs/old/warn.log-%d{yyyy-MM-dd-HH}.%i">
-            <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
-                <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1000"/>
-        </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="ErrorAppender" fileName="logs/error.log"
-                                 filePattern="logs/old/error.log-%d{yyyy-MM-dd-HH}.%i">
+        <RollingRandomAccessFile name="WarnErrorAppender" fileName="logs/warn_error.log"
+                     filePattern="logs/old/warn_error.log-%d{yyyy-MM-dd-HH}.%i">
             <PatternLayout pattern="%d{DEFAULT} [ %p ] %c{1} - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
@@ -115,11 +106,10 @@
         <Root level="${env:BK_LOG_LEVEL}">
             <AppenderRef ref="CarreraAppender"/>
         </Root>
-        
+
         <Logger name="org.apache.bookkeeper" additivity="false" level="${env:BK_LOG_LEVEL}">
             <AppenderRef ref="PulsarBookieAppender"/>
-            <AppenderRef ref="ErrorAppender" level="error"/>
-            <AppenderRef ref="WarnAppender" level="warn"/>
+            <AppenderRef ref="WarnErrorAppender" level="warn"/>
         </Logger>
     </Loggers>
 </Configuration>
