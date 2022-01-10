@@ -98,75 +98,8 @@ function start() {
    	    BOOKIE_MEM_OPTS="-Xms${HEAP_SIZE}m -Xmx${HEAP_SIZE}m -XX:MaxDirectMemorySize=${DIRECT_MEMORY_SIZE}m"
     fi
 
-    # SERVICE_NAME: e.g, cproxy-1.binlog.fd.rocketmq.fd.didi.com
-    SERVICE_NAME="test"
-    if [ -f "${BOOKIE_HOME}/.deploy/service.service_name.txt" ]; then
-        SERVICE_NAME=$(cat "${BOOKIE_HOME}/.deploy/service.service_name.txt")
-    elif [ $DIDIENV_ODIN_SERVICE_NAME ];then
-        SERVICE_NAME=$DIDIENV_ODIN_SERVICE_NAME
-    fi
-
-    # CLUSTER_NAME: e.g, gz01
-    CLUSTER_NAME="test"
-     if [ -f "${PROXY_HOME}/.deploy/service.cluster.txt" ]; then
-        CLUSTER_NAME=$(cat .deploy/service.cluster.txt)
-    elif [ $DIDIENV_ODIN_CLUSTER ]; then
-        CLUSTER_NAME=$DIDIENV_ODIN_CLUSTER
-    fi
-
-    # SERVICE_CLUSTER_NAME: e.g, gz01.cproxy-1.binlog.fd.rocketmq.fd.didi.com
-    SERVICE_CLUSTER_NAME=${CLUSTER_NAME}"."${SERVICE_NAME}
-    if [[ $SERVICE_NAME == *"bookkeeper"*"iot"* ]]; then #处理iot场景的bookkeeper集群
-        BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
-        BOOKKEEPER_CONF_ENV="online"
-        case "$SERVICE_NAME" in
-            *test*)
-                BOOKKEEPER_CONF_ENV="test"
-            ;;
-            *preview*)
-                BOOKKEEPER_CONF_ENV="preview"
-            ;;
-            *public*)
-                if [[ $CLUSTER_NAME && $CLUSTER_NAME =~ "us01" ]]; then
-                  BOOKKEEPER_CONF_CLUSTER="us01-public"
-                else
-                  BOOKKEEPER_CONF_CLUSTER="public"
-                fi
-            ;;
-            *car*)
-                BOOKKEEPER_CONF_CLUSTER="car"
-            ;;
-            *bike*)
-                BOOKKEEPER_CONF_CLUSTER="bike"
-            ;;
-            *mqtt-bike*)
-                BOOKKEEPER_CONF_CLUSTER="mqtt-bike"
-            ;;
-        esac
-        #判断iot的bk集群是否带有编号，如public-0.public.bookkeeper.iot.ddmq.didi.com，表示iot public集群的0号bookkeeper集群，需要使用0号对应的配置
-        SERVICE_NAME_PREFIX=${SERVICE_NAME%%.*}
-        SERVIVE_NAME_NUM=${SERVICE_NAME_PREFIX##*-}
-        IS_NUMBER=`echo $SERVIVE_NAME_NUM|sed 's/[0-9]//g'`
-        if [ -z $IS_NUMBER ];then
-            if [ $BOOKKEEPER_CONF_CLUSTER ]; then
-                BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_CLUSTER-$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
-            else
-                BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
-            fi
-        else
-            BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/bookkeeper.conf"
-        fi
-    elif [[ ${SERVICE_NAME} == preview.preview-bookkeeper.dop.ddmq.didi.com ]]; then
-      BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.conf"
-    elif [[ ${SERVICE_NAME} == level1.bookkeeper.dop.ddmq.didi.com ]]; then
-        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
-    elif [[ ${SERVICE_NAME} == level2.bookkeeper.dop.ddmq.didi.com ]]; then
-        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.conf"
-    elif [[ ${SERVICE_NAME} == level3.bookkeeper.dop.ddmq.didi.com ]]; then
-        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.conf"
-    elif [[ ${SERVICE_NAME} == perf.bookkeeper.dop.ddmq.didi.com ]]; then
-      BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf"
-    fi
+    is_check_ssd="true"
+    init_server_info ${is_check_ssd}
 
     # log directory & file
     BOOKIE_LOG_DIR=${BOOKIE_LOG_DIR:-"$BOOKIE_HOME/logs"}
@@ -259,7 +192,7 @@ function stop() {
 
 function backup_logs() {
     #bakup log
-    echo "backup log"
+    echo -n "backup log"
     if [ ! -x ${BOOKIE_LOG_DIR}/old ]; then
       mkdir -p ${BOOKIE_LOG_DIR}/old
     fi
@@ -294,6 +227,117 @@ function check_pid() {
     return 0
 }
 
+function check_ssd() {
+    dir_name=$1
+    echo -n "check dir_name: ${dir_name}"
+    dev_name=`df -h -a |grep data0|awk '{print $1}'|awk -F '/' '{print $3}'`
+    is_ssd=`cat "/sys/block/${dev_name}/queue/rotational"`
+    if [ ${is_ssd} -ne 0 ];then
+        echo -n "===== sdd check failed: data0 is not ssd ===== "
+        exit 1
+    else
+        echo -n "===== sdd check ok: maven build successfully! ====="
+    fi
+}
+
+function init_server_info() {
+    # SERVICE_NAME: e.g, cproxy-1.binlog.fd.rocketmq.fd.didi.com
+    is_check_ssd=$1
+    SERVICE_NAME="test"
+    if [ -f "${BOOKIE_HOME}/.deploy/service.service_name.txt" ]; then
+        SERVICE_NAME=$(cat "${BOOKIE_HOME}/.deploy/service.service_name.txt")
+    elif [ $DIDIENV_ODIN_SERVICE_NAME ];then
+        SERVICE_NAME=$DIDIENV_ODIN_SERVICE_NAME
+    fi
+
+     # CLUSTER_NAME: e.g, gz01
+     CLUSTER_NAME="test"
+      if [ -f "${PROXY_HOME}/.deploy/service.cluster.txt" ]; then
+         CLUSTER_NAME=$(cat .deploy/service.cluster.txt)
+     elif [ $DIDIENV_ODIN_CLUSTER ]; then
+         CLUSTER_NAME=$DIDIENV_ODIN_CLUSTER
+     fi
+
+     # SERVICE_CLUSTER_NAME: e.g, gz01.cproxy-1.binlog.fd.rocketmq.fd.didi.com
+     SERVICE_CLUSTER_NAME=${CLUSTER_NAME}"."${SERVICE_NAME}
+     if [[ $SERVICE_NAME == *"bookkeeper"*"iot"* ]]; then #处理iot场景的bookkeeper集群
+         if [[ ${is_check_ssd} == "true" ]];then
+            check_ssd 'data1'
+         fi
+         export BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
+         BOOKKEEPER_CONF_ENV="online"
+         case "$SERVICE_NAME" in
+             *test*)
+                 BOOKKEEPER_CONF_ENV="test"
+             ;;
+             *preview*)
+                 BOOKKEEPER_CONF_ENV="preview"
+             ;;
+             *public*)
+                 if [[ $CLUSTER_NAME && $CLUSTER_NAME =~ "us01" ]]; then
+                   BOOKKEEPER_CONF_CLUSTER="us01-public"
+                 else
+                   BOOKKEEPER_CONF_CLUSTER="public"
+                 fi
+             ;;
+             *car*)
+                 BOOKKEEPER_CONF_CLUSTER="car"
+             ;;
+             *bike*)
+                 BOOKKEEPER_CONF_CLUSTER="bike"
+             ;;
+             *mqtt-bike*)
+                 BOOKKEEPER_CONF_CLUSTER="mqtt-bike"
+             ;;
+         esac
+         #判断iot的bk集群是否带有编号，如public-0.public.bookkeeper.iot.ddmq.didi.com，表示iot public集群的0号bookkeeper集群，需要使用0号对应的配置
+         SERVICE_NAME_PREFIX=${SERVICE_NAME%%.*}
+         SERVIVE_NAME_NUM=${SERVICE_NAME_PREFIX##*-}
+         IS_NUMBER=`echo $SERVIVE_NAME_NUM|sed 's/[0-9]//g'`
+         if [ -z $IS_NUMBER ];then
+             if [ $BOOKKEEPER_CONF_CLUSTER ]; then
+                 BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_CLUSTER-$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
+             else
+                 BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/$BOOKKEEPER_CONF_ENV/$BOOKKEEPER_CONF_ENV-bookkeeper-$SERVIVE_NAME_NUM.conf"
+             fi
+         else
+             BOOKIE_CONF="${BOOKIE_HOME}/conf/iot_conf/bookkeeper.conf"
+         fi
+     elif [[ ${SERVICE_NAME} == preview.preview-bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.conf"
+     elif [[ ${SERVICE_NAME} == level1.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
+     elif [[ ${SERVICE_NAME} == level2.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.conf"
+     elif [[ ${SERVICE_NAME} == level3.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.conf"
+     elif [[ ${SERVICE_NAME} == perf.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf"
+     fi
+     export SERVICE_NAME
+     export CLUSTER_NAME
+     export SERVICE_CLUSTER_NAME
+     export BOOKKEEPER_CONF_ENV
+     export BOOKKEEPER_CONF_CLUSTER
+     export BOOKIE_CONF
+     echo "${BOOKIE_CONF}"
+}
+
 function status(){
     check_pid
     local running=$?
@@ -324,8 +368,12 @@ case "$1" in
         # 检查服务
         status
         ;;
+    "init_server_info" )
+        # 初始化集群信息
+        init_server_info $2
+        ;;
     *)
-        echo "supporting cmd: start/stop/reload/status"
+        echo -n "supporting cmd: start/stop/reload/status/init_server_info"
         exit 1
         ;;
 esac
