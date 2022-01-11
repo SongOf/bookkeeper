@@ -78,7 +78,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
     boolean parallelRead = false;
     final AtomicBoolean complete = new AtomicBoolean(false);
     boolean allowFailFast = false;
-    Set<BookieId> skipStatusRemoveBookies;
 
     abstract class LedgerEntryRequest implements SpeculativeRequestExecutor, AutoCloseable {
 
@@ -92,7 +91,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
         final DistributionSchedule.WriteSet writeSet;
         final LedgerEntryImpl entryImpl;
         final long eId;
-        Set<BookieId> skipStatusRemoveBookies;
 
         LedgerEntryRequest(List<BookieId> ensemble, long lId, long eId) {
             this.entryImpl = LedgerEntryImpl.create(lId, eId);
@@ -108,10 +106,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
             } else {
                 writeSet = lh.getWriteSetForReadOperation(eId);
             }
-        }
-
-        void initiate(Set<BookieId> skipStatusRemoveBookies) {
-            this.skipStatusRemoveBookies = skipStatusRemoveBookies;
         }
 
         @Override
@@ -295,16 +289,13 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
         void read() {
             for (int i = 0; i < writeSet.size(); i++) {
                 BookieId to = ensemble.get(writeSet.get(i));
-                if (!(skipStatusRemoveBookies != null && skipStatusRemoveBookies.size() > 0
-                        && skipStatusRemoveBookies.contains(to))) {
-                    try {
-                        sendReadTo(writeSet.get(i), to, this);
-                    } catch (InterruptedException ie) {
-                        LOG.error("Interrupted reading entry {} : ", this, ie);
-                        Thread.currentThread().interrupt();
-                        fail(BKException.Code.InterruptedException);
-                        return;
-                    }
+                try {
+                    sendReadTo(writeSet.get(i), to, this);
+                } catch (InterruptedException ie) {
+                    LOG.error("Interrupted reading entry {} : ", this, ie);
+                    Thread.currentThread().interrupt();
+                    fail(BKException.Code.InterruptedException);
+                    return;
                 }
             }
         }
@@ -411,10 +402,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
 
             try {
                 BookieId to = ensemble.get(bookieIndex);
-                if (skipStatusRemoveBookies != null && skipStatusRemoveBookies.size() > 0
-                        && skipStatusRemoveBookies.contains(to)) {
-                    return to;
-                }
                 sendReadTo(bookieIndex, to, this);
                 sentToHosts.add(to);
                 sentReplicas.set(replica);
@@ -521,11 +508,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
     }
 
     void initiate() {
-        initiate(null);
-    }
-
-    void initiate(Set<BookieId> skipStatusRemoveBookies) {
-        this.skipStatusRemoveBookies = skipStatusRemoveBookies;
         long nextEnsembleChange = startEntryId, i = startEntryId;
         this.requestTimeNanos = MathUtils.nowInNano();
         List<BookieId> ensemble = null;
@@ -540,7 +522,6 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
             } else {
                 entry = new SequenceReadRequest(ensemble, lh.ledgerId, i);
             }
-            entry.initiate(this.skipStatusRemoveBookies);
             seq.add(entry);
             i++;
         } while (i <= endEntryId);
@@ -549,7 +530,7 @@ class PendingReadOp implements ReadEntryCallback, SafeRunnable {
             entry.read();
             if (!parallelRead && clientCtx.getConf().readSpeculativeRequestPolicy.isPresent()) {
                 speculativeTask = clientCtx.getConf().readSpeculativeRequestPolicy.get()
-                        .initiateSpeculativeRequest(clientCtx.getScheduler(), entry);
+                    .initiateSpeculativeRequest(clientCtx.getScheduler(), entry);
             }
         }
     }

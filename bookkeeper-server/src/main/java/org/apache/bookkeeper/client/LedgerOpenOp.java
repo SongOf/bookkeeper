@@ -25,7 +25,6 @@ import static org.apache.bookkeeper.client.BookKeeper.DigestType.fromApiDigestTy
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -38,7 +37,6 @@ import org.apache.bookkeeper.client.api.BKException.Code;
 import org.apache.bookkeeper.client.api.LedgerMetadata;
 import org.apache.bookkeeper.client.api.ReadHandle;
 import org.apache.bookkeeper.client.impl.OpenBuilderBase;
-import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.OpStatsLogger;
 import org.apache.bookkeeper.util.MathUtils;
 import org.apache.bookkeeper.util.OrderedGenericCallback;
@@ -108,38 +106,27 @@ class LedgerOpenOp {
      * Inititates the ledger open operation.
      */
     public void initiate() {
-        initiate(null);
-    }
-
-    public void initiate(Set<BookieId> skipStatusRemoveBookies) {
         startTime = MathUtils.nowInNano();
 
         /**
          * Asynchronously read the ledger metadata node.
          */
         bk.getLedgerManager().readLedgerMetadata(ledgerId)
-                .whenComplete((metadata, exception) -> {
+            .whenComplete((metadata, exception) -> {
                     if (exception != null) {
                         openComplete(BKException.getExceptionCode(exception), null);
                     } else {
-                        openWithMetadata(metadata, skipStatusRemoveBookies);
+                        openWithMetadata(metadata);
                     }
                 });
     }
+
     /**
      * Inititates the ledger open operation without recovery.
      */
     public void initiateWithoutRecovery() {
         this.doRecovery = false;
         initiate();
-    }
-
-    /**
-     * Inititates the ledger open operation without recovery.
-     */
-    public void initiateWithoutRecovery(Set<BookieId> skipStatusRemoveBookies) {
-        this.doRecovery = false;
-        initiate(skipStatusRemoveBookies);
     }
 
     private void closeLedgerHandle() {
@@ -155,7 +142,7 @@ class LedgerOpenOp {
         }
     }
 
-    private void openWithMetadata(Versioned<LedgerMetadata> versionedMetadata, Set<BookieId> skipStatusRemoveBookies) {
+    private void openWithMetadata(Versioned<LedgerMetadata> versionedMetadata) {
         LedgerMetadata metadata = versionedMetadata.getValue();
 
         final byte[] passwd;
@@ -233,7 +220,7 @@ class LedgerOpenOp {
                 public String toString() {
                     return String.format("Recover(%d)", ledgerId);
                 }
-            }, skipStatusRemoveBookies);
+            });
         } else {
             lh.asyncReadLastConfirmed(new ReadLastConfirmedCallback() {
                 @Override
@@ -247,7 +234,7 @@ class LedgerOpenOp {
                         openComplete(BKException.Code.OK, lh);
                     }
                 }
-            }, null, skipStatusRemoveBookies);
+            }, null);
 
         }
     }

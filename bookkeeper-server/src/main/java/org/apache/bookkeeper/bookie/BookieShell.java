@@ -477,8 +477,6 @@ public class BookieShell implements Tool {
             opts.addOption("l", "ledger", true, "Recover a specific ledger");
             opts.addOption("sk", "skipOpenLedgers", false, "Skip recovering open ledgers");
             opts.addOption("d", "deleteCookie", false, "Delete cookie node for the bookie.");
-            opts.addOption("skbs", "skipRemoveBookieStatus", false,
-                    "Skip remove Bookie Status.");
         }
 
         @Override
@@ -510,7 +508,6 @@ public class BookieShell implements Tool {
             boolean dryrun = cmdLine.hasOption("dr");
             boolean force = cmdLine.hasOption("f");
             boolean skipOpenLedgers = cmdLine.hasOption("sk");
-            boolean skipRemoveBookieStatus = cmdLine.hasOption("skbs");
             boolean removeCookies = !dryrun && cmdLine.hasOption("d");
 
             Long ledgerId = getOptionLedgerIdValue(cmdLine, "ledger", -1);
@@ -524,7 +521,6 @@ public class BookieShell implements Tool {
             flags.ledger(ledgerId);
             flags.skipOpenLedgers(skipOpenLedgers);
             flags.query(query);
-            flags.skipRemoveBookieStatus(skipRemoveBookieStatus);
             boolean result = cmd.apply(bkConf, flags);
             return (result) ? 0 : -1;
         }
