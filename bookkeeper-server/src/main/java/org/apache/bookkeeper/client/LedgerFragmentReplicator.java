@@ -419,9 +419,9 @@ public class LedgerFragmentReplicator {
     }
 
     /**
-     *   make sure this update safety when different callback run this updating
-     *   why use synchronized not AtomicInteger.compareAndSet?
-     *   for expect value may be update all the time,so waste more cpu to compareAndSet
+     *   Make sure this update safety when different callback run this updating,
+     *   not use synchronized not AtomicInteger.compareAndSet:
+     *   expect value may be updated all the time,so it's no need to waste more cpu to compare and set the new value.
      * */
     private synchronized void updateAverageEntrySize(int toSendSize) {
         averageEntrySize = (int) (averageEntrySize * AVERAGE_ENTRY_SIZE_RATIO
