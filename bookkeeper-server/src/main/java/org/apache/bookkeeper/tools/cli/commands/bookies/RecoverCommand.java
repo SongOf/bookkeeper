@@ -100,6 +100,9 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
 
         @Parameter(names = { "-bs", "--bokiesrc" }, description = "Bookie address")
         private String bookieAddress;
+
+        @Parameter(names = { "-rate", "--replicationrate" }, description = "Replication rate in bytes")
+        private int replicateRate;
     }
 
     @Override
@@ -120,6 +123,7 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
         boolean removeCookies = !dryrun && flags.deleteCookie;
 
         Long ledgerId = flags.ledger;
+        int replicateRate = flags.replicateRate;
 
         // Get bookies list
         final String[] bookieStrs = flags.bookieAddress.split(",");
@@ -143,6 +147,7 @@ public class RecoverCommand extends BookieCommand<RecoverCommand.RecoverFlags> {
         }
 
         LOG.info("Constructing admin");
+        conf.setReplicationRateByBytes(replicateRate);
         ClientConfiguration adminConf = new ClientConfiguration(conf);
         BookKeeperAdmin admin = new BookKeeperAdmin(adminConf);
         LOG.info("Construct admin : {}", admin);
