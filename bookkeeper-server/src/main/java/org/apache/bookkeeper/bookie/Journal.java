@@ -394,7 +394,7 @@ public class Journal extends BookieCriticalThread implements CheckpointSource {
                 }
 
                 return forceWriteWaiters.size();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 journalStats.getJournalSyncStats()
                         .registerFailedEvent(MathUtils.elapsedNanos(startTime), TimeUnit.NANOSECONDS);
                 throw e;
