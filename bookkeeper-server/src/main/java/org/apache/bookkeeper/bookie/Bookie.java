@@ -1498,7 +1498,8 @@ public class Bookie extends BookieCriticalThread {
                 LOG.trace("Reading {}@{}", entryId, ledgerId);
             }
             ByteBuf entry = handle.readEntry(entryId);
-            bookieStats.getReadBytes().add(entry.readableBytes());
+            entrySize = entry.readableBytes();
+            bookieStats.getReadBytes().add(entrySize);
             success = true;
             return entry;
         } finally {
