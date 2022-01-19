@@ -419,9 +419,7 @@ public class LedgerFragmentReplicator {
         }, null);
     }
 
-    /**
-     * Make sure this update safety when different callback run this updating
-     * */
+    /* make sure this update safety when different callback run this updating */
     private synchronized void updateAverageEntrySize(int toSendSize) {
         averageEntrySize = (int) (averageEntrySize * AVERAGE_ENTRY_SIZE_RATIO
                 + (1 - AVERAGE_ENTRY_SIZE_RATIO) * toSendSize);
