@@ -342,7 +342,7 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
          fi
-         export BOOKIE_MEM_OPTS="-Xms20G -Xmx20G -XX:MaxDirectMemorySize=20G"
+         export BOOKIE_MEM_OPTS="-Xms8G -Xmx8G -XX:MaxDirectMemorySize=20G"
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-v.perf.preview-bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
