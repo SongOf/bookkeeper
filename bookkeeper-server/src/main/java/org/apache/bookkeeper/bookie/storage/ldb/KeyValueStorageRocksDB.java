@@ -74,7 +74,10 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
     private final ReadOptions optionCache;
     private final ReadOptions optionDontCache;
 
+    private final boolean locationIndexSyncSwitch;
+
     private final WriteBatch emptyBatch;
+    private final Batch emptyRocksDBBatch;
 
     private static final String ROCKSDB_LOG_PATH = "dbStorage_rocksDB_logPath";
     private static final String ROCKSDB_LOG_LEVEL = "dbStorage_rocksDB_logLevel";
@@ -259,12 +262,14 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
 
         optionCache.setFillCache(true);
         optionDontCache.setFillCache(false);
+        locationIndexSyncSwitch = conf.getLocationIndexSyncSwitch();
         if (dbConfigType == DbConfigType.Huge) {
-            if (!conf.getLocationIndexSyncSwitch()){
+            if (!locationIndexSyncSwitch) {
                 optionSync.setSync(false);
                 optionCache.setFillCache(false);
             }
         }
+        emptyRocksDBBatch = new RocksDBBatch();
     }
 
     @Override
@@ -460,7 +465,11 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
 
     @Override
     public Batch newBatch() {
-        return new RocksDBBatch();
+        if (locationIndexSyncSwitch) {
+            return new RocksDBBatch();
+        } else {
+            return emptyRocksDBBatch;
+        }
     }
 
     private class RocksDBBatch implements Batch {
