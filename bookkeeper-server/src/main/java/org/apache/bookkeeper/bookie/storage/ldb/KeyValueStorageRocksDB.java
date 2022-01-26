@@ -259,6 +259,12 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
 
         optionCache.setFillCache(true);
         optionDontCache.setFillCache(false);
+        if (dbConfigType == DbConfigType.Huge) {
+            if (!conf.getLocationIndexSyncSwitch()){
+                optionSync.setSync(false);
+                optionCache.setFillCache(false);
+            }
+        }
     }
 
     @Override

@@ -620,8 +620,7 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             entryLogger.flush();
 
             long batchFlushStarTime = System.nanoTime();
-            batch.flush();
-            batch.close();
+            entryLocationIndex.flush(batch);
             if (log.isDebugEnabled()) {
                 log.debug("DB batch flushed time : {} s",
                         MathUtils.elapsedNanos(batchFlushStarTime) / (double) TimeUnit.SECONDS.toNanos(1));
@@ -864,9 +863,7 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             }
         }
 
-        batch.flush();
-        batch.close();
-
+        entryLocationIndex.flush(batch);
         return numberOfEntries.longValue();
     }
 

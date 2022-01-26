@@ -50,11 +50,12 @@ public class EntryLocationIndex implements Closeable {
     private final ConcurrentLongHashSet deletedLedgers = new ConcurrentLongHashSet();
 
     private final EntryLocationIndexStats stats;
+    private final boolean locationIndexSyncSwitch;
 
     public EntryLocationIndex(ServerConfiguration conf, KeyValueStorageFactory storageFactory, String basePath,
             StatsLogger stats) throws IOException {
         locationsDb = storageFactory.newKeyValueStorage(basePath, "locations", DbConfigType.Huge, conf);
-
+        locationIndexSyncSwitch = conf.getLocationIndexSyncSwitch();
         this.stats = new EntryLocationIndexStats(
             stats,
             () -> {
@@ -129,8 +130,12 @@ public class EntryLocationIndex implements Closeable {
     public void addLocation(long ledgerId, long entryId, long location) throws IOException {
         Batch batch = locationsDb.newBatch();
         addLocation(batch, ledgerId, entryId, location);
-        batch.flush();
-        batch.close();
+        if (locationIndexSyncSwitch) {
+            batch.flush();
+            batch.close();
+        } else {
+            locationsDb.sync();
+        }
     }
 
     public Batch newBatch() {
@@ -146,7 +151,11 @@ public class EntryLocationIndex implements Closeable {
         }
 
         try {
-            batch.put(key.array, value.array);
+            if (locationIndexSyncSwitch) {
+                batch.put(key.array, value.array);
+            } else {
+                locationsDb.put(key.array, value.array);
+            }
         } finally {
             key.recycle();
             value.recycle();
@@ -168,8 +177,21 @@ public class EntryLocationIndex implements Closeable {
             addLocation(batch, e.ledger, e.entry, e.location);
         }
 
-        batch.flush();
-        batch.close();
+        if (locationIndexSyncSwitch) {
+            batch.flush();
+            batch.clear();
+        } else {
+            locationsDb.sync();
+        }
+    }
+
+    public void flush(Batch batch) throws IOException {
+        if (locationIndexSyncSwitch) {
+            batch.flush();
+            batch.clear();
+        } else {
+            locationsDb.sync();
+        }
     }
 
     public void delete(long ledgerId) throws IOException {
@@ -238,7 +260,11 @@ public class EntryLocationIndex implements Closeable {
                     if (log.isDebugEnabled()) {
                         log.debug("Deleting index for ({}, {})", keyToDelete.getFirst(), keyToDelete.getSecond());
                     }
-                    batch.remove(keyToDelete.array);
+                    if (locationIndexSyncSwitch) {
+                        batch.remove(keyToDelete.array);
+                    } else {
+                        locationsDb.delete(keyToDelete.array);
+                    }
                     ++deletedEntriesInBatch;
                     if (deletedEntries++ == 0) {
                         System.arraycopy(keyToDelete.array, 0, firstDeletedKey, 0, firstDeletedKey.length);
@@ -246,15 +272,24 @@ public class EntryLocationIndex implements Closeable {
                 }
 
                 if (deletedEntriesInBatch > DELETE_ENTRIES_BATCH_SIZE) {
-                    batch.flush();
-                    batch.clear();
+                    if (locationIndexSyncSwitch) {
+                        batch.flush();
+                        batch.clear();
+                    } else {
+                        locationsDb.sync();
+                    }
                     deletedEntriesInBatch = 0;
                 }
             }
         } finally {
             try {
-                batch.flush();
-                batch.clear();
+                if (locationIndexSyncSwitch) {
+                    batch.flush();
+                    batch.clear();
+                } else {
+                    locationsDb.sync();
+                }
+
                 if (deletedEntries != 0) {
                     locationsDb.compact(firstDeletedKey, keyToDelete.array);
                 }
