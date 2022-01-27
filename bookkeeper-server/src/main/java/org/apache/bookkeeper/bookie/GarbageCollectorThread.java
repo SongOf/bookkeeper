@@ -121,7 +121,7 @@ public class GarbageCollectorThread extends SafeRunnable {
 
     final ServerConfiguration conf;
 
-    final static AtomicLong threadNum = new AtomicLong(0);
+    private static final AtomicLong threadNum = new AtomicLong(0);
     /**
      * Create a garbage collector thread.
      *
