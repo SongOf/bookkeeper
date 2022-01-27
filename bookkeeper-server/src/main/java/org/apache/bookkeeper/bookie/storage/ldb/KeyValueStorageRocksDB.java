@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -75,6 +76,7 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
     private final ReadOptions optionDontCache;
 
     private final WriteBatch emptyBatch;
+    private final RocksDBStatsParser dbStatsParser;
 
     private static final String ROCKSDB_LOG_PATH = "dbStorage_rocksDB_logPath";
     private static final String ROCKSDB_LOG_LEVEL = "dbStorage_rocksDB_logLevel";
@@ -259,6 +261,7 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
 
         optionCache.setFillCache(true);
         optionDontCache.setFillCache(false);
+        dbStatsParser = new RocksDBStatsParser(this.db);
     }
 
     @Override
@@ -450,6 +453,11 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
         } catch (RocksDBException e) {
             throw new IOException("Error in getting records count", e);
         }
+    }
+
+    @Override
+    public List<RocksDBStatsParser.RocksDBCompactionStats> compactMetric() {
+        return dbStatsParser.parseDBMetric();
     }
 
     @Override
