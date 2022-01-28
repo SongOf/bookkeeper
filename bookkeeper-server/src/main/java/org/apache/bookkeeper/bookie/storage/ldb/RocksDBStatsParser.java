@@ -2,12 +2,15 @@ package org.apache.bookkeeper.bookie.storage.ldb;
 
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,6 +19,11 @@ public class RocksDBStatsParser {
     private final Pattern levelStatsPattern = Pattern.compile("^L[0-9_].*");
     private final Pattern userPriorityStatsPattern = Pattern.compile("User.*");
     private final RocksDB db;
+    public static final List<String> DB_DEFAULT_LEVELS =
+            Lists.newArrayList("L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "User");
+    private static final long UPDATE_INTERVAL_MILLIS = 30*1000;
+    private long lastUpdateTime = System.currentTimeMillis();
+    private Map<String, RocksDBCompactionStats> lastDBStats = getDefaultRocksDBCompactionStats();
 
     public RocksDBStatsParser() {
         this.db = null;
@@ -25,38 +33,49 @@ public class RocksDBStatsParser {
         this.db = rocksdb;
     }
 
-    public List<RocksDBCompactionStats> parseDBMetric() {
+    public Map<String, RocksDBCompactionStats> parseDBMetric() {
         try {
+            if (System.currentTimeMillis() - lastUpdateTime < UPDATE_INTERVAL_MILLIS) {
+                return lastDBStats;
+            }
             String rocksdbStats = this.db.getProperty("rocksdb.stats");
             log.debug("rocksdbStats: {}", rocksdbStats);
-            return parseDBMetric(rocksdbStats);
+            if (StringUtils.isBlank(rocksdbStats)) {
+                throw new RuntimeException("rocksdb.stats value is null");
+            }
+            lastDBStats = parseDBMetric(rocksdbStats);
+            lastUpdateTime = System.currentTimeMillis();
         } catch (RocksDBException e) {
             log.error("get rocksdb.stats failed.", e);
-            return Lists.newArrayList();
         }
+        return lastDBStats;
     }
 
-    public List<RocksDBCompactionStats> parseDBMetric(String rocksdbStats) {
-        List<RocksDBCompactionStats> levelStatsList = Lists.newArrayList();
+    public Map<String, RocksDBCompactionStats> parseDBMetric(String rocksdbStats) {
+        Map<String, RocksDBCompactionStats> levelStats = Maps.newHashMap();
         try {
             String[] rocksdbStatsSplit = rocksdbStats.split("\n");
             for (String rocksdbOneLineData : rocksdbStatsSplit) {
                 rocksdbOneLineData = convertData2Standard(rocksdbOneLineData);
                 Matcher levelStatMatcher = levelStatsPattern.matcher(rocksdbOneLineData);
+                RocksDBCompactionStats stat;
                 while (levelStatMatcher.find()) {
                     String levelStat = levelStatMatcher.group();
-                    levelStatsList.add(string2Bean(levelStat));
+                    stat = string2Bean(levelStat);
+                    levelStats.put(stat.getLevel(), stat);
                 }
                 Matcher userPriorityStatMatcher = userPriorityStatsPattern.matcher(rocksdbOneLineData);
                 if (userPriorityStatMatcher.find()) {
                     String levelStat = userPriorityStatMatcher.group();
-                    levelStatsList.add(string2Bean(levelStat));
+                    stat = string2Bean(levelStat);
+                    levelStats.put(stat.getLevel(), stat);
                 }
             }
+            checkStats(levelStats);
         } catch (Exception e) {
             log.error("parse DB metric failed.", e);
         }
-        return levelStatsList;
+        return levelStats;
     }
 
     private String convertData2Standard(String data) {
@@ -95,11 +114,27 @@ public class RocksDBStatsParser {
         return stats;
     }
 
-    public class RocksDBCompactionStats {
-        private String level;
+    private void checkStats(Map<String, RocksDBCompactionStats> levelStats) {
+        for (String l : DB_DEFAULT_LEVELS) {
+            if (!levelStats.containsKey(l)){
+                levelStats.put(l, new RocksDBCompactionStats(l));
+            }
+        }
+    }
+
+    public static Map<String, RocksDBCompactionStats> getDefaultRocksDBCompactionStats() {
+        Map<String, RocksDBCompactionStats> defaultStats = Maps.newHashMap();
+        for (String l : DB_DEFAULT_LEVELS) {
+            defaultStats.put(l, new RocksDBCompactionStats(l));
+        }
+        return defaultStats;
+    }
+
+    public static class RocksDBCompactionStats {
+        private String level = "L0";
         private long filesCnt;
         private long filesCompactCnt;
-        private String size;
+        private String size = "0.00 KB";
         private double score;
         private double readGB;
         private double rnGB;
@@ -114,8 +149,15 @@ public class RocksDBStatsParser {
         private double compactMergeCPUSec;
         private double compactSumCnt;
         private double compactAvgSec;
-        private String keyIn;
-        private String keyDrop;
+        private String keyIn = "0";
+        private String keyDrop = "0";
+
+        public RocksDBCompactionStats() {
+        }
+
+        public RocksDBCompactionStats(String level) {
+            this.level = level;
+        }
 
         public String getLevel() {
             return level;

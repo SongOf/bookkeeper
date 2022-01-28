@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -455,8 +455,7 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
         }
     }
 
-    @Override
-    public List<RocksDBStatsParser.RocksDBCompactionStats> compactMetric() {
+    public Map<String, RocksDBStatsParser.RocksDBCompactionStats> compactMetric() {
         return dbStatsParser.parseDBMetric();
     }
 

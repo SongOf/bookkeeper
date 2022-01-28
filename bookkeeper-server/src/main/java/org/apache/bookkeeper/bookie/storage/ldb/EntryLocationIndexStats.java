@@ -21,8 +21,9 @@ package org.apache.bookkeeper.bookie.storage.ldb;
 
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.BOOKIE_SCOPE;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.CATEGORY_SERVER;
+import static org.apache.bookkeeper.bookie.storage.ldb.RocksDBStatsParser.DB_DEFAULT_LEVELS;
 
-import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.Getter;
 import org.apache.bookkeeper.stats.Gauge;
@@ -94,7 +95,7 @@ class EntryLocationIndexStats {
 
     EntryLocationIndexStats(StatsLogger statsLogger,
                             Supplier<Long> entriesCountSupplier,
-                            Supplier<List<RocksDBStatsParser.RocksDBCompactionStats>> compactSupplier) {
+                            Supplier<Map<String, RocksDBStatsParser.RocksDBCompactionStats>> compactSupplier) {
         entriesCountGauge = new Gauge<Long>() {
             @Override
             public Long getDefaultValue() {
@@ -108,7 +109,7 @@ class EntryLocationIndexStats {
         };
         statsLogger.registerGauge(ENTRIES_COUNT, entriesCountGauge);
 
-        for (RocksDBStatsParser.RocksDBCompactionStats stat : compactSupplier.get()) {
+        for (String level : DB_DEFAULT_LEVELS) {
             filesCntGauge = new Gauge<Long>() {
                 @Override
                 public Long getDefaultValue() {
@@ -117,10 +118,10 @@ class EntryLocationIndexStats {
 
                 @Override
                 public Long getSample() {
-                    return stat.getFilesCnt();
+                    return compactSupplier.get().get(level).getFilesCnt();
                 }
             };
-            statsLogger.registerGauge(DB_COMPACT_FILES_COUNT + "_" + stat.getLevel(), filesCntGauge);
+            statsLogger.registerGauge(DB_COMPACT_FILES_COUNT + "_" + level, filesCntGauge);
 
             filesCompactCntGauge = new Gauge<Long>() {
                 @Override
@@ -130,10 +131,10 @@ class EntryLocationIndexStats {
 
                 @Override
                 public Long getSample() {
-                    return stat.getFilesCompactCnt();
+                    return compactSupplier.get().get(level).getFilesCompactCnt();
                 }
             };
-            statsLogger.registerGauge(DB_COMPACT_FILES_COMPACTING_COUNT + "_" + stat.getLevel(), filesCompactCntGauge);
+            statsLogger.registerGauge(DB_COMPACT_FILES_COMPACTING_COUNT + "_" + level, filesCompactCntGauge);
 
             compactSumCntGauge = new Gauge<Double>() {
                 @Override
@@ -143,10 +144,10 @@ class EntryLocationIndexStats {
 
                 @Override
                 public Double getSample() {
-                    return stat.getCompactSumCnt();
+                    return compactSupplier.get().get(level).getCompactSumCnt();
                 }
             };
-            statsLogger.registerGauge(DB_COMPACT_SUM_COUNT + "_" + stat.getLevel(), compactSumCntGauge);
+            statsLogger.registerGauge(DB_COMPACT_SUM_COUNT + "_" + level, compactSumCntGauge);
 
             compactSumSecGauge = new Gauge<Double>() {
                 @Override
@@ -156,10 +157,10 @@ class EntryLocationIndexStats {
 
                 @Override
                 public Double getSample() {
-                    return stat.getCompactSumSec();
+                    return compactSupplier.get().get(level).getCompactSumSec();
                 }
             };
-            statsLogger.registerGauge(DB_COMPACT_SUM_SECOND + "_" + stat.getLevel(), compactSumSecGauge);
+            statsLogger.registerGauge(DB_COMPACT_SUM_SECOND + "_" + level, compactSumSecGauge);
         }
     }
 }

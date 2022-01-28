@@ -65,13 +65,8 @@ public class EntryLocationIndex implements Closeable {
                     return -1L;
                 }
             },
-            () -> {
-                try {
-                    return locationsDb.compactMetric();
-                } catch (Exception e) {
-                    return Lists.newArrayList();
-                }
-            });
+            () -> locationsDb.compactMetric()
+        );
     }
 
     @Override

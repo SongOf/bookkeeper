@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 public class RocksDBStatsTest {
     private static Logger LOGGER = LoggerFactory.getLogger("BKRocksDBStatsTest");
@@ -50,9 +51,9 @@ public class RocksDBStatsTest {
                 "Interval stall: 00:00:0.000 H:M:S, 0.0 percent";
 
         RocksDBStatsParser parser = new RocksDBStatsParser();
-        List<RocksDBStatsParser.RocksDBCompactionStats> stats = parser.parseDBMetric(restult);
-        Assert.assertEquals("level not right",stats.get(0).getLevel(), "L0");
-        Assert.assertEquals("compactSumCnt not right",stats.get(0).getCompactSumCnt(),37,0);
-        Assert.assertEquals("compactSumSec not right",stats.get(0).getCompactSumSec(),140.03,2);
+        Map<String, RocksDBStatsParser.RocksDBCompactionStats> stats = parser.parseDBMetric(restult);
+        Assert.assertEquals("level not right",stats.get("L0").getLevel(), "L0");
+        Assert.assertEquals("compactSumCnt not right",stats.get("L0").getCompactSumCnt(),37,0);
+        Assert.assertEquals("compactSumSec not right",stats.get("L0").getCompactSumSec(),140.03,2);
     }
 }
