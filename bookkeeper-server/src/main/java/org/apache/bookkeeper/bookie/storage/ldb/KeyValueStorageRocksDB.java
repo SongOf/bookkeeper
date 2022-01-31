@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -78,6 +79,7 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
 
     private final WriteBatch emptyBatch;
     private final Batch emptyRocksDBBatch;
+    private final RocksDBStatsParser dbStatsParser;
 
     private static final String ROCKSDB_LOG_PATH = "dbStorage_rocksDB_logPath";
     private static final String ROCKSDB_LOG_LEVEL = "dbStorage_rocksDB_logLevel";
@@ -181,8 +183,8 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
                             DEFAULT_REFILL_PERIOD_MICROS);
                     int fairness = conf.getInt(ROCKSDB_RATE_FAIRNESS,
                             DEFAULT_FAIRNESS);
-                    RateLimiterMode rateLimiterMode = RateLimiterMode.getRateLimiterMode(
-                            conf.getByte(ROCKSDB_RATELIMITERMODE, DEFAULT_MODE.getValue()));
+                    RateLimiterMode rateLimiterMode = RateLimiterMode.valueOf(
+                            conf.getString(ROCKSDB_RATELIMITERMODE, DEFAULT_MODE.name()));
                     final boolean autoTune = true;
                     RateLimiter rateLimiter = new RateLimiter(rateBytesPerSecond, refillPeriodMicros, fairness, rateLimiterMode, autoTune);
                     options.setRateLimiter(rateLimiter);
@@ -270,6 +272,7 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
             }
         }
         emptyRocksDBBatch = new RocksDBBatch();
+        dbStatsParser = new RocksDBStatsParser(this.db);
     }
 
     @Override
@@ -461,6 +464,10 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
         } catch (RocksDBException e) {
             throw new IOException("Error in getting records count", e);
         }
+    }
+
+    public Map<String, RocksDBStatsParser.RocksDBCompactionStats> compactMetric() {
+        return dbStatsParser.parseDBMetric();
     }
 
     @Override

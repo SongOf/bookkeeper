@@ -22,6 +22,7 @@ package org.apache.bookkeeper.bookie.storage.ldb;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -141,6 +142,11 @@ public interface KeyValueStorage extends Closeable {
      * @return the number of keys.
      */
     long count() throws IOException;
+
+    /**
+     * @return the metric of storage.
+     */
+    Map<String, RocksDBStatsParser.RocksDBCompactionStats> compactMetric();
 
     /**
      * Iterator interface.

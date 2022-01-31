@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.apache.bookkeeper.bookie.Bookie;
 import org.apache.bookkeeper.bookie.EntryLocation;
 import org.apache.bookkeeper.bookie.storage.ldb.KeyValueStorage.Batch;
@@ -64,7 +65,9 @@ public class EntryLocationIndex implements Closeable {
                 } catch (IOException e) {
                     return -1L;
                 }
-            });
+            },
+            () -> locationsDb.compactMetric()
+        );
     }
 
     @Override
