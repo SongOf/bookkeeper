@@ -180,8 +180,8 @@ public class KeyValueStorageRocksDB implements KeyValueStorage {
                             DEFAULT_REFILL_PERIOD_MICROS);
                     int fairness = conf.getInt(ROCKSDB_RATE_FAIRNESS,
                             DEFAULT_FAIRNESS);
-                    RateLimiterMode rateLimiterMode = RateLimiterMode.getRateLimiterMode(
-                            conf.getByte(ROCKSDB_RATELIMITERMODE, DEFAULT_MODE.getValue()));
+                    RateLimiterMode rateLimiterMode = RateLimiterMode.valueOf(
+                            conf.getString(ROCKSDB_RATELIMITERMODE, DEFAULT_MODE.name()));
                     final boolean autoTune = true;
                     RateLimiter rateLimiter = new RateLimiter(rateBytesPerSecond, refillPeriodMicros, fairness, rateLimiterMode, autoTune);
                     options.setRateLimiter(rateLimiter);
