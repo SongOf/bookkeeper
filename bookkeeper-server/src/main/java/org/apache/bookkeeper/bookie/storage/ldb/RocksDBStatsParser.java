@@ -18,9 +18,13 @@ public class RocksDBStatsParser {
     private static final Logger log = LoggerFactory.getLogger(RocksDBStatsParser.class);
     private final Pattern levelStatsPattern = Pattern.compile("^L[0-9_].*");
     private final Pattern userPriorityStatsPattern = Pattern.compile("User.*");
+    private final Pattern dataKBUnitPattern = Pattern.compile("\\s*(KB|K)");
+    private final Pattern dataMBUnitPattern = Pattern.compile("\\s*(MB|M)");
+    private final Pattern dataGBUnitPattern = Pattern.compile("\\s*(GB|G)");
+    private final Pattern dataTBUnitPattern = Pattern.compile("\\s*(TB|T)");
     private final RocksDB db;
     public static final List<String> DB_DEFAULT_LEVELS =
-            Lists.newArrayList("L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "User");
+            Lists.newArrayList("L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "Sum", "User");
     private static final long UPDATE_INTERVAL_MILLIS = 30*1000;
     private long lastUpdateTime = System.currentTimeMillis();
     private Map<String, RocksDBCompactionStats> lastDBStats = getDefaultRocksDBCompactionStats();
@@ -94,7 +98,7 @@ public class RocksDBStatsParser {
         stats.setLevel(rocksdbStatSplit[0]);
         stats.setFilesCnt(Integer.parseInt(rocksdbStatSplit[1].split("/")[0]));
         stats.setFilesCompactCnt(Integer.parseInt(rocksdbStatSplit[1].split("/")[1]));
-        stats.setSize(rocksdbStatSplit[2]);
+        stats.setSize(formatStr2byteUnit(rocksdbStatSplit[2]));
         stats.setScore(Double.valueOf(rocksdbStatSplit[3]));
         stats.setReadGB(Double.valueOf(rocksdbStatSplit[4]));
         stats.setRnGB(Double.valueOf(rocksdbStatSplit[5]));
@@ -109,8 +113,8 @@ public class RocksDBStatsParser {
         stats.setCompactMergeCPUSec(Double.valueOf(rocksdbStatSplit[14]));
         stats.setCompactSumCnt(Double.valueOf(rocksdbStatSplit[15]));
         stats.setCompactAvgSec(Double.valueOf(rocksdbStatSplit[16]));
-        stats.setKeyIn(rocksdbStatSplit[17]);
-        stats.setKeyDrop(rocksdbStatSplit[18]);
+        stats.setKeyIn(formatStr2byteUnit(rocksdbStatSplit[17]));
+        stats.setKeyDrop(formatStr2byteUnit(rocksdbStatSplit[18]));
         return stats;
     }
 
@@ -130,11 +134,31 @@ public class RocksDBStatsParser {
         return defaultStats;
     }
 
+    public double formatStr2byteUnit(String dataWithUnit) {
+        Matcher dataMatcher = dataKBUnitPattern.matcher(dataWithUnit);
+        if (dataMatcher.find()) {
+            return 1024 * Double.valueOf(dataMatcher.replaceAll(""));
+        }
+        dataMatcher = dataMBUnitPattern.matcher(dataWithUnit);
+        if (dataMatcher.find()) {
+            return 1024 * 1024 * Double.valueOf(dataMatcher.replaceAll(""));
+        }
+        dataMatcher = dataGBUnitPattern.matcher(dataWithUnit);
+        if (dataMatcher.find()) {
+            return 1024 * 1024 * 1024 * Double.valueOf(dataMatcher.replaceAll(""));
+        }
+        dataMatcher = dataTBUnitPattern.matcher(dataWithUnit);
+        if (dataMatcher.find()) {
+            return 1024 * 1024 * 1024 * 1024 * Double.valueOf(dataMatcher.replaceAll(""));
+        }
+        return Double.valueOf(dataWithUnit);
+    }
+
     public static class RocksDBCompactionStats {
         private String level = "L0";
         private long filesCnt;
         private long filesCompactCnt;
-        private String size = "0.00 KB";
+        private double size;
         private double score;
         private double readGB;
         private double rnGB;
@@ -149,8 +173,8 @@ public class RocksDBStatsParser {
         private double compactMergeCPUSec;
         private double compactSumCnt;
         private double compactAvgSec;
-        private String keyIn = "0";
-        private String keyDrop = "0";
+        private double keyIn;
+        private double keyDrop;
 
         public RocksDBCompactionStats() {
         }
@@ -183,11 +207,11 @@ public class RocksDBStatsParser {
             this.filesCompactCnt = filesCompactCnt;
         }
 
-        public String getSize() {
+        public double getSize() {
             return size;
         }
 
-        public void setSize(String size) {
+        public void setSize(double size) {
             this.size = size;
         }
 
@@ -303,19 +327,19 @@ public class RocksDBStatsParser {
             this.compactAvgSec = compactAvgSec;
         }
 
-        public String getKeyIn() {
+        public double getKeyIn() {
             return keyIn;
         }
 
-        public void setKeyIn(String keyIn) {
+        public void setKeyIn(double keyIn) {
             this.keyIn = keyIn;
         }
 
-        public String getKeyDrop() {
+        public double getKeyDrop() {
             return keyDrop;
         }
 
-        public void setKeyDrop(String keyDrop) {
+        public void setKeyDrop(double keyDrop) {
             this.keyDrop = keyDrop;
         }
     }
