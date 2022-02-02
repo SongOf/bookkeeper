@@ -16,8 +16,7 @@ import java.util.regex.Pattern;
 
 public class RocksDBStatsParser {
     private static final Logger log = LoggerFactory.getLogger(RocksDBStatsParser.class);
-    private final Pattern levelStatsPattern = Pattern.compile("^L[0-9_].*");
-    private final Pattern userPriorityStatsPattern = Pattern.compile("User.*");
+    private final Pattern levelStatsPattern = Pattern.compile("^(User|Sum|L[0-9_]).*");
     private final Pattern dataKBUnitPattern = Pattern.compile("\\s*(KB|K)");
     private final Pattern dataMBUnitPattern = Pattern.compile("\\s*(MB|M)");
     private final Pattern dataGBUnitPattern = Pattern.compile("\\s*(GB|G)");
@@ -65,12 +64,6 @@ public class RocksDBStatsParser {
                 RocksDBCompactionStats stat;
                 while (levelStatMatcher.find()) {
                     String levelStat = levelStatMatcher.group();
-                    stat = string2Bean(levelStat);
-                    levelStats.put(stat.getLevel(), stat);
-                }
-                Matcher userPriorityStatMatcher = userPriorityStatsPattern.matcher(rocksdbOneLineData);
-                if (userPriorityStatMatcher.find()) {
-                    String levelStat = userPriorityStatMatcher.group();
                     stat = string2Bean(levelStat);
                     levelStats.put(stat.getLevel(), stat);
                 }
