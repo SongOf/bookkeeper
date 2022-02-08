@@ -20,7 +20,6 @@
  */
 package org.apache.bookkeeper.bookie.storage.ldb;
 
-import com.google.common.collect.Iterables;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,7 +27,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
 import org.apache.bookkeeper.bookie.Bookie;
 import org.apache.bookkeeper.bookie.EntryLocation;
 import org.apache.bookkeeper.bookie.storage.ldb.KeyValueStorage.Batch;
@@ -45,18 +43,16 @@ import org.slf4j.LoggerFactory;
  * <p>For each ledger multiple entries are stored in the same "record", represented
  * by the {@link LedgerIndexPage} class.
  */
-public class EntryLocationIndex implements Closeable {
+public abstract class EntryLocationIndex implements Closeable {
 
-    private final KeyValueStorage locationsDb;
-    private final ConcurrentLongHashSet deletedLedgers = new ConcurrentLongHashSet();
+    protected final KeyValueStorage locationsDb;
+    protected final ConcurrentLongHashSet deletedLedgers = new ConcurrentLongHashSet();
 
     private final EntryLocationIndexStats stats;
-    private final boolean locationIndexSyncSwitch;
 
     public EntryLocationIndex(ServerConfiguration conf, KeyValueStorageFactory storageFactory, String basePath,
             StatsLogger stats) throws IOException {
         locationsDb = storageFactory.newKeyValueStorage(basePath, "locations", DbConfigType.Huge, conf);
-        locationIndexSyncSwitch = conf.getLocationIndexSyncSwitch();
         this.stats = new EntryLocationIndexStats(
             stats,
             () -> {
@@ -130,20 +126,9 @@ public class EntryLocationIndex implements Closeable {
         }
     }
 
-    public void addLocation(long ledgerId, long entryId, long location) throws IOException {
-        Batch batch = locationsDb.newBatch();
-        addLocation(batch, ledgerId, entryId, location);
-        if (locationIndexSyncSwitch) {
-            batch.flush();
-            batch.close();
-        } else {
-            locationsDb.sync();
-        }
-    }
+    public abstract void addLocation(long ledgerId, long entryId, long location) throws IOException;
 
-    public Batch newBatch() {
-        return locationsDb.newBatch();
-    }
+    public abstract Batch newBatch();
 
     public void addLocation(Batch batch, long ledgerId, long entryId, long location) throws IOException {
         LongPairWrapper key = LongPairWrapper.get(ledgerId, entryId);
@@ -154,48 +139,20 @@ public class EntryLocationIndex implements Closeable {
         }
 
         try {
-            if (locationIndexSyncSwitch) {
-                batch.put(key.array, value.array);
-            } else {
-                locationsDb.put(key.array, value.array);
-            }
+            put(batch, key.array, value.array);
         } finally {
             key.recycle();
             value.recycle();
         }
     }
 
-    public void updateLocations(Iterable<EntryLocation> newLocations) throws IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("Update locations -- {}", Iterables.size(newLocations));
-        }
+    public abstract void updateLocations(Iterable<EntryLocation> newLocations) throws IOException;
 
-        Batch batch = newBatch();
-        // Update all the ledger index pages with the new locations
-        for (EntryLocation e : newLocations) {
-            if (log.isDebugEnabled()) {
-                log.debug("Update location - ledger: {} -- entry: {}", e.ledger, e.entry);
-            }
+    public abstract void put(Batch batch, byte[] key, byte[] value) throws IOException;
 
-            addLocation(batch, e.ledger, e.entry, e.location);
-        }
+    public abstract void flush(Batch batch) throws IOException;
 
-        if (locationIndexSyncSwitch) {
-            batch.flush();
-            batch.clear();
-        } else {
-            locationsDb.sync();
-        }
-    }
-
-    public void flush(Batch batch) throws IOException {
-        if (locationIndexSyncSwitch) {
-            batch.flush();
-            batch.clear();
-        } else {
-            locationsDb.sync();
-        }
-    }
+    public abstract void close(Batch batch) throws IOException;
 
     public void delete(long ledgerId) throws IOException {
         // We need to find all the LedgerIndexPage records belonging to one specific
@@ -203,7 +160,7 @@ public class EntryLocationIndex implements Closeable {
         deletedLedgers.add(ledgerId);
     }
 
-    private static final int DELETE_ENTRIES_BATCH_SIZE = 100000;
+    protected static final int DELETE_ENTRIES_BATCH_SIZE = 100000;
 
     public void removeOffsetFromDeletedLedgers() throws IOException {
         LongPairWrapper firstKeyWrapper = LongPairWrapper.get(-1, -1);
@@ -221,7 +178,7 @@ public class EntryLocationIndex implements Closeable {
         long deletedEntries = 0;
         long deletedEntriesInBatch = 0;
 
-        Batch batch = locationsDb.newBatch();
+        Batch batch = newBatch();
         final byte[] firstDeletedKey = new byte[keyToDelete.array.length];
 
         try {
@@ -263,11 +220,7 @@ public class EntryLocationIndex implements Closeable {
                     if (log.isDebugEnabled()) {
                         log.debug("Deleting index for ({}, {})", keyToDelete.getFirst(), keyToDelete.getSecond());
                     }
-                    if (locationIndexSyncSwitch) {
-                        batch.remove(keyToDelete.array);
-                    } else {
-                        locationsDb.delete(keyToDelete.array);
-                    }
+                    delete(batch, keyToDelete);
                     ++deletedEntriesInBatch;
                     if (deletedEntries++ == 0) {
                         System.arraycopy(keyToDelete.array, 0, firstDeletedKey, 0, firstDeletedKey.length);
@@ -275,23 +228,13 @@ public class EntryLocationIndex implements Closeable {
                 }
 
                 if (deletedEntriesInBatch > DELETE_ENTRIES_BATCH_SIZE) {
-                    if (locationIndexSyncSwitch) {
-                        batch.flush();
-                        batch.clear();
-                    } else {
-                        locationsDb.sync();
-                    }
+                    flush(batch);
                     deletedEntriesInBatch = 0;
                 }
             }
         } finally {
             try {
-                if (locationIndexSyncSwitch) {
-                    batch.flush();
-                    batch.clear();
-                } else {
-                    locationsDb.sync();
-                }
+                flush(batch);
 
                 if (deletedEntries != 0) {
                     locationsDb.compact(firstDeletedKey, keyToDelete.array);
@@ -300,7 +243,7 @@ public class EntryLocationIndex implements Closeable {
                 firstKeyWrapper.recycle();
                 lastKeyWrapper.recycle();
                 keyToDelete.recycle();
-                batch.close();
+                close(batch);
             }
         }
 
@@ -313,5 +256,15 @@ public class EntryLocationIndex implements Closeable {
         }
     }
 
-    private static final Logger log = LoggerFactory.getLogger(EntryLocationIndex.class);
+    public abstract void delete(Batch batch, LongPairWrapper keyToDelete) throws IOException;
+
+    public static EntryLocationIndex newInstance(ServerConfiguration conf, KeyValueStorageFactory storageFactory,
+                                          String basePath, StatsLogger stats) throws IOException {
+        if (conf.getLocationIndexSyncData()) {
+            return new EntryLocationIndexAsync(conf, storageFactory, basePath, stats);
+        }
+        return new EntryLocationIndexSync(conf, storageFactory, basePath, stats);
+    }
+
+    protected static final Logger log = LoggerFactory.getLogger(EntryLocationIndex.class);
 }
