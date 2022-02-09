@@ -588,10 +588,10 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             return;
         }
 
-        long startTime = MathUtils.nowInNano();
-
         // Only a single flush operation can happen at a time
         flushMutex.lock();
+
+        long startTime = MathUtils.nowInNano();
 
         try {
             // Swap the write cache so that writes can continue to happen while the flush is
@@ -617,17 +617,22 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                 }
             });
 
+            long entryLoggerStart = MathUtils.nowInNano();
             entryLogger.flush();
+            recordSuccessfulEvent(dbLedgerStorageStats.getFlushEntryLogStats(), entryLoggerStart);
 
-            long batchFlushStarTime = System.nanoTime();
+            long batchFlushStartTime = MathUtils.nowInNano();
             batch.flush();
             batch.close();
+            recordSuccessfulEvent(dbLedgerStorageStats.getFlushLocationIndexStats(), batchFlushStartTime);
             if (log.isDebugEnabled()) {
                 log.debug("DB batch flushed time : {} s",
-                        MathUtils.elapsedNanos(batchFlushStarTime) / (double) TimeUnit.SECONDS.toNanos(1));
+                        MathUtils.elapsedNanos(batchFlushStartTime) / (double) TimeUnit.SECONDS.toNanos(1));
             }
 
+            long ledgerIndexStartTime = MathUtils.nowInNano();
             ledgerIndex.flush();
+            recordSuccessfulEvent(dbLedgerStorageStats.getFlushLedgerIndexStats(), ledgerIndexStartTime);
 
             cleanupExecutor.execute(() -> {
                 // There can only be one single cleanup task running because the cleanupExecutor
@@ -659,9 +664,11 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             recordSuccessfulEvent(dbLedgerStorageStats.getFlushStats(), startTime);
             dbLedgerStorageStats.getFlushSizeStats().registerSuccessfulValue(sizeToFlush);
         } catch (IOException e) {
+            recordFailedEvent(dbLedgerStorageStats.getFlushStats(), startTime);
             // Leave IOExecption as it is
             throw e;
         } catch (RuntimeException e) {
+            recordFailedEvent(dbLedgerStorageStats.getFlushStats(), startTime);
             // Wrap unchecked exceptions
             throw new IOException(e);
         } finally {
