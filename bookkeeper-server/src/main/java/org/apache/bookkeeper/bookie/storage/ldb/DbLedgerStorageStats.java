@@ -49,6 +49,9 @@ class DbLedgerStorageStats {
     private static final String READAHEAD_BATCH_COUNT = "readahead-batch-count";
     private static final String READAHEAD_BATCH_SIZE = "readahead-batch-size";
     private static final String FLUSH = "flush";
+    private static final String FLUSH_ENTRYLOG = "flush-entrylog";
+    private static final String FLUSH_LOCATIONS_INDEX = "flush-locations-index";
+    private static final String FLUSH_LEDGER_INDEX = "flush-ledger-index";
     private static final String FLUSH_SIZE = "flush-size";
     private static final String THROTTLED_WRITE_REQUESTS = "throttled-write-requests";
     private static final String REJECTED_WRITE_REQUESTS = "rejected-write-requests";
@@ -96,6 +99,21 @@ class DbLedgerStorageStats {
         help = "operation stats of flushing write cache to entry log files"
     )
     private final OpStatsLogger flushStats;
+    @StatsDoc(
+            name = FLUSH_ENTRYLOG,
+            help = "operation stats of flushing to the current entry log file"
+    )
+    private final OpStatsLogger flushEntryLogStats;
+    @StatsDoc(
+            name = FLUSH_LOCATIONS_INDEX,
+            help = "operation stats of flushing to the locations index"
+    )
+    private final OpStatsLogger flushLocationIndexStats;
+    @StatsDoc(
+            name = FLUSH_LOCATIONS_INDEX,
+            help = "operation stats of flushing to the ledger index"
+    )
+    private final OpStatsLogger flushLedgerIndexStats;
     @StatsDoc(
         name = FLUSH_SIZE,
         help = "the distribution of number of bytes flushed from write cache to entry log files"
@@ -145,6 +163,9 @@ class DbLedgerStorageStats {
         readAheadBatchCountStats = stats.getOpStatsLogger(READAHEAD_BATCH_COUNT);
         readAheadBatchSizeStats = stats.getOpStatsLogger(READAHEAD_BATCH_SIZE);
         flushStats = stats.getOpStatsLogger(FLUSH);
+        flushEntryLogStats = stats.getOpStatsLogger(FLUSH_ENTRYLOG);
+        flushLocationIndexStats = stats.getOpStatsLogger(FLUSH_LOCATIONS_INDEX);
+        flushLedgerIndexStats = stats.getOpStatsLogger(FLUSH_LEDGER_INDEX);
         flushSizeStats = stats.getOpStatsLogger(FLUSH_SIZE);
 
         throttledWriteRequests = stats.getCounter(THROTTLED_WRITE_REQUESTS);
