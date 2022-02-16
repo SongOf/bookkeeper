@@ -52,7 +52,7 @@ public abstract class EntryLocationIndex implements Closeable {
 
     public EntryLocationIndex(ServerConfiguration conf, KeyValueStorageFactory storageFactory, String basePath,
             StatsLogger stats) throws IOException {
-        locationsDb = storageFactory.newKeyValueStorage(basePath, "locations", DbConfigType.Huge, conf);
+        locationsDb = storageFactory.newKeyValueStorage(basePath, "locations", DbConfigType.EntryLocation, conf);
         this.stats = new EntryLocationIndexStats(
             stats,
             () -> {
