@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import io.netty.util.internal.PlatformDependent;
 // CHECKSTYLE.ON: IllegalImport
 import java.io.File;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.apache.bookkeeper.bookie.InterleavedLedgerStorage;
 import org.apache.bookkeeper.bookie.LedgerStorage;
@@ -3703,7 +3704,12 @@ public class ServerConfiguration extends AbstractConfiguration<ServerConfigurati
      * @return String configured default rocksdb conf.
      */
     public String getDefaultRocksDBConf() {
-        return getString(DEFAULT_ROCKSDB_CONF, "conf/bk_rocksdb/default_rocksdb.conf");
+        String defaultPath = "conf/default_rocksdb.conf";
+        URL defURL = getClass().getClassLoader().getResource(defaultPath);
+        if (defURL != null) {
+            defaultPath = defURL.getPath();
+        }
+        return getString(DEFAULT_ROCKSDB_CONF, defaultPath);
     }
 
     /**
@@ -3722,7 +3728,12 @@ public class ServerConfiguration extends AbstractConfiguration<ServerConfigurati
      * @return String configured entry Location rocksdb conf.
      */
     public String getEntryLocationRocksdbConf() {
-        return getString(ENTRY_LOCATION_ROCKSDB_CONF, "conf/bk_rocksdb/entry_location_rocksdb.conf");
+        String defaultPath = "conf/entry_location_rocksdb.conf";
+        URL defURL = getClass().getClassLoader().getResource(defaultPath);
+        if (defURL != null) {
+            defaultPath = defURL.getPath();
+        }
+        return getString(ENTRY_LOCATION_ROCKSDB_CONF, defaultPath);
     }
 
     /**
@@ -3741,7 +3752,12 @@ public class ServerConfiguration extends AbstractConfiguration<ServerConfigurati
      * @return String configured ledger metadata rocksdb conf.
      */
     public String getLedgerMetadataRocksdbConf() {
-        return getString(LEDGER_METADATA_ROCKSDB_CONF, "conf/bk_rocksdb/ledger_metadata_rocksdb.conf");
+        String defaultPath = "conf/ledger_metadata_rocksdb.conf";
+        URL defURL = getClass().getClassLoader().getResource(defaultPath);
+        if (defURL != null) {
+            defaultPath = defURL.getPath();
+        }
+        return getString(LEDGER_METADATA_ROCKSDB_CONF, defaultPath);
     }
 
     /**
