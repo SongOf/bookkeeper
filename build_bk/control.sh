@@ -283,11 +283,11 @@ function init_server_info() {
              *car*)
                  BOOKKEEPER_CONF_CLUSTER="car"
              ;;
-             *bike*)
-                 BOOKKEEPER_CONF_CLUSTER="bike"
-             ;;
              *mqtt-bike*)
                  BOOKKEEPER_CONF_CLUSTER="mqtt-bike"
+             ;;
+             *bike*)
+                 BOOKKEEPER_CONF_CLUSTER="bike"
              ;;
          esac
          #判断iot的bk集群是否带有编号，如public-0.public.bookkeeper.iot.ddmq.didi.com，表示iot public集群的0号bookkeeper集群，需要使用0号对应的配置
