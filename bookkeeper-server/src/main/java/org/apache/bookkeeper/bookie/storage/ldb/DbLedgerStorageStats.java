@@ -53,7 +53,11 @@ class DbLedgerStorageStats {
     private static final String FLUSH_LOCATIONS_INDEX = "flush-locations-index";
     private static final String FLUSH_LEDGER_INDEX = "flush-ledger-index";
     private static final String FLUSH_SIZE = "flush-size";
+
+    @Deprecated
     private static final String THROTTLED_WRITE_REQUESTS = "throttled-write-requests";
+    // throttled-write-requests is deprecated, use new metric: throttled-write
+    private static final String THROTTLED_WRITE = "throttled-write";
     private static final String REJECTED_WRITE_REQUESTS = "rejected-write-requests";
     private static final String WRITE_CACHE_SIZE = "write-cache-size";
     private static final String WRITE_CACHE_COUNT = "write-cache-count";
@@ -125,6 +129,11 @@ class DbLedgerStorageStats {
     )
     private final Counter throttledWriteRequests;
     @StatsDoc(
+            name = THROTTLED_WRITE,
+            help = "The stats of throttled write due to write cache is full"
+    )
+    private final OpStatsLogger throttledWriteStats;
+    @StatsDoc(
         name = REJECTED_WRITE_REQUESTS,
         help = "The number of requests rejected due to write cache is full"
     )
@@ -169,6 +178,7 @@ class DbLedgerStorageStats {
         flushSizeStats = stats.getOpStatsLogger(FLUSH_SIZE);
 
         throttledWriteRequests = stats.getCounter(THROTTLED_WRITE_REQUESTS);
+        throttledWriteStats = stats.getOpStatsLogger(THROTTLED_WRITE);
         rejectedWriteRequests = stats.getCounter(REJECTED_WRITE_REQUESTS);
 
         writeCacheSizeGauge = new Gauge<Long>() {
