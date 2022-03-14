@@ -318,11 +318,11 @@ function init_server_info() {
              check_ssd 'data0'
          fi
          case $HOSTNAME in
-             # map旧的10个节点放到这里, bookie 暂时无充足的机器，无法全部迁移到新节点，此机器保留使用
-             level2-bookkeeper-ys-sf-46ced-[10-19].docker.ys)
+            level2-bookkeeper-ys-sf-46ced-1[0-9].docker.ys)
+                # map旧的10个节点放到这里, bookie 暂时无充足的机器，无法全部迁移到新节点，此机器保留使用
                 BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.map.conf";;
-             *)
-             BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.conf";;
+            *)
+                BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.conf";;
          esac
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.map.bookkeeper.dop.ddmq.didi.com ]]; then
          # map后续新扩容的节点放到新的服务树
