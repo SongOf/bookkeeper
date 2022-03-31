@@ -177,8 +177,7 @@ public abstract class EntryLocationIndex implements Closeable {
         long deletedEntries = 0;
         long deletedEntriesInBatch = 0;
 
-        Batch batch = newBatch();
-        final byte[] firstDeletedKey = new byte[keyToDelete.array.length];
+        Batch batch = locationsDb.newBatch();
 
         try {
             for (long ledgerId : ledgersToDelete) {
@@ -219,11 +218,8 @@ public abstract class EntryLocationIndex implements Closeable {
                     if (log.isDebugEnabled()) {
                         log.debug("Deleting index for ({}, {})", keyToDelete.getFirst(), keyToDelete.getSecond());
                     }
-                    delete(batch, keyToDelete);
+                    batch.remove(keyToDelete.array);
                     ++deletedEntriesInBatch;
-                    if (deletedEntries++ == 0) {
-                        System.arraycopy(keyToDelete.array, 0, firstDeletedKey, 0, firstDeletedKey.length);
-                    }
                 }
 
                 if (deletedEntriesInBatch > DELETE_ENTRIES_BATCH_SIZE) {
@@ -233,11 +229,8 @@ public abstract class EntryLocationIndex implements Closeable {
             }
         } finally {
             try {
-                flush(batch);
-
-                if (deletedEntries != 0) {
-                    locationsDb.compact(firstDeletedKey, keyToDelete.array);
-                }
+                batch.flush();
+                batch.clear();
             } finally {
                 firstKeyWrapper.recycle();
                 lastKeyWrapper.recycle();
