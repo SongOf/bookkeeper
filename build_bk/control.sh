@@ -354,8 +354,8 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
          fi
-         HEAP_SIZE=$((DOCKER_MEM*2/10))
-         DIRECT_MEMORY_SIZE=$((DOCKER_MEM*2/10))
+         HEAP_SIZE=$((DOCKER_MEM*12/100))
+         DIRECT_MEMORY_SIZE=$((DOCKER_MEM*68/100))
          BOOKIE_MEM_OPTS="-Xms${HEAP_SIZE}m -Xmx${HEAP_SIZE}m -XX:MaxDirectMemorySize=${DIRECT_MEMORY_SIZE}m"
          cp -f "${BOOKIE_HOME}/conf/rocksdb/perf/entry_location_rocksdb.conf" "${BOOKIE_HOME}/conf/entry_location_rocksdb.conf"
          case $HOSTNAME in
