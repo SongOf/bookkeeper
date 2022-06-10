@@ -99,6 +99,9 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
     // Write cache that is used to swap with writeCache during flushes
     protected volatile WriteCache writeCacheBeingFlushed;
 
+    // Write cache that is used to store with writeCache flushed
+    protected volatile WriteCache writeCacheLastFlushed;
+
     // Cache where we insert entries for speculative reading
     private final ReadCache readCache;
 
@@ -153,6 +156,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                 conf.getFlushEntrySortBufferInitSize());
         this.writeCacheBeingFlushed = new WriteCache(allocator, writeCacheMaxSize / 2,
                 conf.getFlushEntrySortBufferInitSize());
+        this.writeCacheLastFlushed = new WriteCache(allocator, writeCacheMaxSize / 2,
+                conf.getFlushEntrySortBufferInitSize());
 
         this.checkpointSource = checkpointSource;
 
@@ -182,8 +187,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         dbLedgerStorageStats = new DbLedgerStorageStats(
             statsLogger,
-            () -> writeCache.size() + writeCacheBeingFlushed.size(),
-            () -> writeCache.count() + writeCacheBeingFlushed.count(),
+            () -> writeCache.size() + writeCacheBeingFlushed.size() + writeCacheLastFlushed.size(),
+            () -> writeCache.count() + writeCacheBeingFlushed.count() + writeCacheLastFlushed.count(),
             () -> readCache.size(),
             () -> readCache.count()
         );
@@ -243,6 +248,7 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
             writeCache.close();
             writeCacheBeingFlushed.close();
+            writeCacheLastFlushed.close();
             readCache.close();
             executor.shutdown();
 
@@ -439,6 +445,14 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             return entry;
         }
 
+        // If there's a flush finished, the entry might be in the flush buffer
+        entry = writeCacheLastFlushed.get(ledgerId, entryId);
+        if (entry != null) {
+            recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
+            recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
+            return entry;
+        }
+
         // Try reading from read-ahead cache
         entry = readCache.get(ledgerId, entryId);
         if (entry != null) {
@@ -548,7 +562,24 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                     long entryId = entry.readLong();
                     entry.resetReaderIndex();
                     if (log.isDebugEnabled()) {
-                        log.debug("Found last entry for ledger {} in write cache being flushed: {}", ledgerId, entryId);
+                        log.debug("Found last entry for ledger {} in write cache flushing: {}", ledgerId, entryId);
+                    }
+                }
+
+                recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
+                recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
+                return entry;
+            }
+
+            // If there's a flush finished, the entry might be in the flush buffer
+            entry = writeCacheLastFlushed.getLastEntry(ledgerId);
+            if (entry != null) {
+                if (log.isDebugEnabled()) {
+                    entry.readLong(); // ledgedId
+                    long entryId = entry.readLong();
+                    entry.resetReaderIndex();
+                    if (log.isDebugEnabled()) {
+                        log.debug("Found last entry for ledger {} in write cache flushed: {}", ledgerId, entryId);
                     }
                 }
 
@@ -653,6 +684,7 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
             lastCheckpoint = thisCheckpoint;
 
+            cloneFlushedCache2LastFlushCache(writeCacheBeingFlushed, writeCacheLastFlushed);
             // Discard all the entry from the write cache, since they're now persisted
             writeCacheBeingFlushed.clear();
 
@@ -680,6 +712,13 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                 flushMutex.unlock();
             }
         }
+    }
+
+    private void cloneFlushedCache2LastFlushCache(WriteCache writeCacheBeingFlushed, WriteCache writeCacheLastFlushed) {
+        writeCacheLastFlushed.clear();
+        writeCacheBeingFlushed.forEach((ledgerId, entryId, data) -> {
+            writeCacheLastFlushed.put(ledgerId, entryId, data);
+        });
     }
 
     /**
@@ -895,11 +934,11 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
     }
 
     long getWriteCacheSize() {
-        return writeCache.size() + writeCacheBeingFlushed.size();
+        return writeCache.size() + writeCacheBeingFlushed.size() + writeCacheLastFlushed.size();
     }
 
     long getWriteCacheCount() {
-        return writeCache.count() + writeCacheBeingFlushed.count();
+        return writeCache.count() + writeCacheBeingFlushed.count() + writeCacheLastFlushed.count();
     }
 
     long getReadCacheSize() {
