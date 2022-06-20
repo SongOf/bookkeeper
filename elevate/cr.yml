@@ -1,4 +1,10 @@
 reviewers: jianghaiting,jiangxuelei,suiyuzeng,tmytangmingyang,houxiaoyu,lushiji,huangzegui,fengjunjie,leohuangqiang
-owners: lushiji
+owners: jianghaiting,jiangxuelei,suiyuzeng,tmytangmingyang,houxiaoyu,lushiji,huangzegui,fengjunjie,leohuangqiang
 strategy: default
 force: 4.14-dop
+exceptSelfAccept: true
+disableSquash: false
+autoSquash: true
+acceptNum: 2
+onlyFastForwards: true
+strategy: ownerSome
