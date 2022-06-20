@@ -139,6 +139,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
     private final long maxReadAheadBytesSize;
 
+    private boolean isWriteCacheFixedLengthEnabled = false;
+
     public SingleDirectoryDbLedgerStorage(ServerConfiguration conf, LedgerManager ledgerManager,
             LedgerDirsManager ledgerDirsManager, LedgerDirsManager indexDirsManager, StateManager stateManager,
             CheckpointSource checkpointSource, Checkpointer checkpointer, StatsLogger statsLogger,
@@ -151,13 +153,17 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
         String baseDir = ledgerDirsManager.getAllLedgerDirs().get(0).toString();
         log.info("Creating single directory db ledger storage on {}", baseDir);
 
+        this.isWriteCacheFixedLengthEnabled = conf.isWriteCacheFixedLengthEnabled();
         this.writeCacheMaxSize = writeCacheSize;
-        this.writeCache = new WriteCache(allocator, writeCacheMaxSize / 2,
-                conf.getFlushEntrySortBufferInitSize());
-        this.writeCacheBeingFlushed = new WriteCache(allocator, writeCacheMaxSize / 2,
-                conf.getFlushEntrySortBufferInitSize());
-        this.writeCacheLastFlushed = new WriteCache(allocator, writeCacheMaxSize / 2,
-                conf.getFlushEntrySortBufferInitSize());
+        if (this.isWriteCacheFixedLengthEnabled) {
+            this.writeCache = new WriteCache(allocator, writeCacheMaxSize / 3);
+            this.writeCacheBeingFlushed = new WriteCache(allocator, writeCacheMaxSize / 3);
+            this.writeCacheLastFlushed = new WriteCache(allocator, writeCacheMaxSize / 3);
+        } else {
+            this.writeCache = new WriteCache(allocator, writeCacheMaxSize / 2);
+            this.writeCacheBeingFlushed = new WriteCache(allocator, writeCacheMaxSize / 2);
+            this.writeCacheLastFlushed = null;
+        }
 
         this.checkpointSource = checkpointSource;
 
@@ -187,8 +193,10 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         dbLedgerStorageStats = new DbLedgerStorageStats(
             statsLogger,
-            () -> writeCache.size() + writeCacheBeingFlushed.size() + writeCacheLastFlushed.size(),
-            () -> writeCache.count() + writeCacheBeingFlushed.count() + writeCacheLastFlushed.count(),
+            () -> this.isWriteCacheFixedLengthEnabled ? writeCache.size() + writeCacheBeingFlushed.size()
+                    + writeCacheLastFlushed.size() : writeCache.size() + writeCacheBeingFlushed.size(),
+            () -> this.isWriteCacheFixedLengthEnabled ? writeCache.count() + writeCacheBeingFlushed.count()
+                    + writeCacheLastFlushed.count() : writeCache.count() + writeCacheBeingFlushed.count(),
             () -> readCache.size(),
             () -> readCache.count()
         );
@@ -248,7 +256,9 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
             writeCache.close();
             writeCacheBeingFlushed.close();
-            writeCacheLastFlushed.close();
+            if (isWriteCacheFixedLengthEnabled) {
+                writeCacheLastFlushed.close();
+            }
             readCache.close();
             executor.shutdown();
 
@@ -446,11 +456,13 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
         }
 
         // If there's a flush finished, the entry might be in the flush buffer
-        entry = writeCacheLastFlushed.get(ledgerId, entryId);
-        if (entry != null) {
-            recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
-            recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
-            return entry;
+        if (isWriteCacheFixedLengthEnabled) {
+            entry = writeCacheLastFlushed.get(ledgerId, entryId);
+            if (entry != null) {
+                recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
+                recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
+                return entry;
+            }
         }
 
         // Try reading from read-ahead cache
@@ -572,20 +584,22 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             }
 
             // If there's a flush finished, the entry might be in the flush buffer
-            entry = writeCacheLastFlushed.getLastEntry(ledgerId);
-            if (entry != null) {
-                if (log.isDebugEnabled()) {
-                    entry.readLong(); // ledgedId
-                    long entryId = entry.readLong();
-                    entry.resetReaderIndex();
+            if (isWriteCacheFixedLengthEnabled) {
+                entry = writeCacheLastFlushed.getLastEntry(ledgerId);
+                if (entry != null) {
                     if (log.isDebugEnabled()) {
-                        log.debug("Found last entry for ledger {} in write cache flushed: {}", ledgerId, entryId);
+                        entry.readLong(); // ledgedId
+                        long entryId = entry.readLong();
+                        entry.resetReaderIndex();
+                        if (log.isDebugEnabled()) {
+                            log.debug("Found last entry for ledger {} in write cache flushed: {}", ledgerId, entryId);
+                        }
                     }
-                }
 
-                recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
-                recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
-                return entry;
+                    recordSuccessfulEvent(dbLedgerStorageStats.getReadCacheHitStats(), startTime);
+                    recordSuccessfulEvent(dbLedgerStorageStats.getReadEntryStats(), startTime);
+                    return entry;
+                }
             }
         } finally {
             writeCacheRotationLock.unlockRead(stamp);
@@ -684,7 +698,9 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
             lastCheckpoint = thisCheckpoint;
 
-            cloneFlushedCache2LastFlushCache(writeCacheBeingFlushed, writeCacheLastFlushed);
+            if (isWriteCacheFixedLengthEnabled) {
+                cloneFlushedCache2LastFlushCache(writeCacheBeingFlushed, writeCacheLastFlushed);
+            }
             // Discard all the entry from the write cache, since they're now persisted
             writeCacheBeingFlushed.clear();
 
@@ -934,11 +950,13 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
     }
 
     long getWriteCacheSize() {
-        return writeCache.size() + writeCacheBeingFlushed.size() + writeCacheLastFlushed.size();
+        return this.isWriteCacheFixedLengthEnabled ? writeCache.size() + writeCacheBeingFlushed.size()
+                + writeCacheLastFlushed.size() : writeCache.size() + writeCacheBeingFlushed.size();
     }
 
     long getWriteCacheCount() {
-        return writeCache.count() + writeCacheBeingFlushed.count() + writeCacheLastFlushed.count();
+        return this.isWriteCacheFixedLengthEnabled ? writeCache.count() + writeCacheBeingFlushed.count()
+                + writeCacheLastFlushed.count() : writeCache.count() + writeCacheBeingFlushed.count();
     }
 
     long getReadCacheSize() {
