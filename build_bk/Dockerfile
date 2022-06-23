@@ -31,3 +31,5 @@ RUN ls -alh
 RUN tar -zxf /home/xiaoju/dop_bookkeeper_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_bk/ --strip-components 1
 RUN rm -rf /home/xiaoju/dop_bookkeeper_tmp
 COPY control.sh /home/xiaoju/pulsar_bk/control.sh
+# TODO 临时拷贝，迁移完后，做此行index_remove.sh 代码做清理
+COPY index_remove.sh /home/xiaoju/pulsar_bk/index_remove.sh
