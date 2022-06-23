@@ -74,6 +74,7 @@ import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.MathUtils;
 import org.apache.bookkeeper.util.collections.ConcurrentLongHashMap;
 import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,9 +150,14 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         checkArgument(ledgerDirsManager.getAllLedgerDirs().size() == 1,
                 "Db implementation only allows for one storage dir");
-
-        String baseDir = ledgerDirsManager.getAllLedgerDirs().get(0).toString();
-        log.info("Creating single directory db ledger storage on {}", baseDir);
+        String indexBaseDir = indexDirsManager.getAllLedgerDirs().get(0).toString();
+        if (StringUtils.isBlank(indexBaseDir)) {
+            indexBaseDir = ledgerDirsManager.getAllLedgerDirs().get(0).toString();
+            log.info("indexDir is not specified, use default, creating single directory db ledger storage on {}",
+                    indexBaseDir);
+        } else {
+            log.info("indexDir is specified, creating single directory db ledger storage on {}", indexBaseDir);
+        }
 
         this.isWriteCacheFixedLengthEnabled = conf.isWriteCacheFixedLengthEnabled();
         this.writeCacheMaxSize = writeCacheSize;
@@ -179,8 +185,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         readCache = new ReadCache(allocator, readCacheMaxSize);
 
-        ledgerIndex = new LedgerMetadataIndex(conf, KeyValueStorageRocksDB.factory, baseDir, statsLogger);
-        entryLocationIndex = EntryLocationIndex.newInstance(conf, KeyValueStorageRocksDB.factory, baseDir, statsLogger);
+        ledgerIndex = new LedgerMetadataIndex(conf, KeyValueStorageRocksDB.factory, indexBaseDir, statsLogger);
+        entryLocationIndex = EntryLocationIndex.newInstance(conf, KeyValueStorageRocksDB.factory, indexBaseDir, statsLogger);
 
         transientLedgerInfoCache = new ConcurrentLongHashMap<>(16 * 1024,
                 Runtime.getRuntime().availableProcessors() * 2);
