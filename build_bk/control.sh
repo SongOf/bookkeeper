@@ -70,6 +70,7 @@ function start() {
     backup_logs
     date >> ${CONSOLE_OUT_LOG}
     check_index_remove
+    check_version_update
     JDK_VERSION=`${JAVA} -version 2>&1|grep "java version"|awk '{print $3}'`
     echo "JDK_VERSION: " $JDK_VERSION
     # define pulsar gc here
@@ -391,6 +392,14 @@ function status(){
         echo "this pulsar-${SERVICE} is stopped"
     fi
     exit 0
+}
+
+function check_version_update() {
+    version_update_result_dir=/home/xiaoju/data0/bk_version
+    version_update_result=${version_update_result_dir}/result
+    if [ ! -f ${version_update_result} ]; then
+        bash ${BOOKIE_HOME}/version_update.sh
+    fi
 }
 
 function check_index_remove() {

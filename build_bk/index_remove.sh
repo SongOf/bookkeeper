@@ -49,7 +49,6 @@ function index_remove() {
          simple_index_remove
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
          export BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
-         simple_index_remove
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2.bookkeeper.dop.ddmq.didi.com ]]; then
          case $HOSTNAME in
             level2-bookkeeper-ys-sf-46ced-1[0-9].docker.ys)
@@ -69,7 +68,6 @@ function index_remove() {
          simple_index_remove
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
         export BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.gz01.conf"
-        simple_index_remove
     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2.bookkeeper.dop.ddmq.didi.com ]]; then
         export BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.gz01.conf"
         simple_index_remove
