@@ -73,6 +73,7 @@ import org.apache.bookkeeper.stats.OpStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.MathUtils;
 import org.apache.bookkeeper.util.collections.ConcurrentLongHashMap;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -150,14 +151,21 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         checkArgument(ledgerDirsManager.getAllLedgerDirs().size() == 1,
                 "Db implementation only allows for one storage dir");
-        String indexBaseDir = indexDirsManager.getAllLedgerDirs().get(0).toString();
-        if (StringUtils.isBlank(indexBaseDir)) {
-            indexBaseDir = ledgerDirsManager.getAllLedgerDirs().get(0).toString();
+        String ledgerBaseDir = ledgerDirsManager.getAllLedgerDirs().get(0).getPath();
+        // indexBaseDir default use ledgerBaseDir
+        String indexBaseDir = ledgerBaseDir;
+        if (CollectionUtils.isEmpty(indexDirsManager.getAllLedgerDirs())) {
             log.info("indexDir is not specified, use default, creating single directory db ledger storage on {}",
                     indexBaseDir);
         } else {
+            // if indexDir is specified, set new value
+            indexBaseDir = indexDirsManager.getAllLedgerDirs().get(0).getPath();
             log.info("indexDir is specified, creating single directory db ledger storage on {}", indexBaseDir);
         }
+
+        StatsLogger ledgerIndexDirStatsLogger = statsLogger
+                .scopeLabel("ledgerDir", ledgerBaseDir)
+                .scopeLabel("indexDir", indexBaseDir);
 
         this.isWriteCacheFixedLengthEnabled = conf.isWriteCacheFixedLengthEnabled();
         this.writeCacheMaxSize = writeCacheSize;
@@ -185,8 +193,10 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         readCache = new ReadCache(allocator, readCacheMaxSize);
 
-        ledgerIndex = new LedgerMetadataIndex(conf, KeyValueStorageRocksDB.factory, indexBaseDir, statsLogger);
-        entryLocationIndex = EntryLocationIndex.newInstance(conf, KeyValueStorageRocksDB.factory, indexBaseDir, statsLogger);
+        ledgerIndex = new LedgerMetadataIndex(conf,
+                KeyValueStorageRocksDB.factory, indexBaseDir, ledgerIndexDirStatsLogger);
+        entryLocationIndex = EntryLocationIndex.newInstance(conf,
+                KeyValueStorageRocksDB.factory, indexBaseDir, ledgerIndexDirStatsLogger);
 
         transientLedgerInfoCache = new ConcurrentLongHashMap<>(16 * 1024,
                 Runtime.getRuntime().availableProcessors() * 2);
@@ -194,11 +204,11 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                 TransientLedgerInfo.LEDGER_INFO_CACHING_TIME_MINUTES,
                 TransientLedgerInfo.LEDGER_INFO_CACHING_TIME_MINUTES, TimeUnit.MINUTES);
 
-        entryLogger = new EntryLogger(conf, ledgerDirsManager, null, statsLogger, allocator);
-        gcThread = new GarbageCollectorThread(conf, ledgerManager, this, statsLogger);
+        entryLogger = new EntryLogger(conf, ledgerDirsManager, null, ledgerIndexDirStatsLogger, allocator);
+        gcThread = new GarbageCollectorThread(conf, ledgerManager, this, ledgerIndexDirStatsLogger);
 
         dbLedgerStorageStats = new DbLedgerStorageStats(
-            statsLogger,
+            ledgerIndexDirStatsLogger,
             () -> this.isWriteCacheFixedLengthEnabled ? writeCache.size() + writeCacheBeingFlushed.size()
                     + writeCacheLastFlushed.size() : writeCache.size() + writeCacheBeingFlushed.size(),
             () -> this.isWriteCacheFixedLengthEnabled ? writeCache.count() + writeCacheBeingFlushed.count()
@@ -207,6 +217,9 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             () -> readCache.count()
         );
         ledgerDirsManager.addLedgerDirsListener(getLedgerDirsListener());
+        if (!ledgerBaseDir.equals(indexBaseDir)) {
+            indexDirsManager.addLedgerDirsListener(getLedgerDirsListener());
+        }
     }
 
     @Override
