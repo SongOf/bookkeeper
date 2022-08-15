@@ -373,11 +373,11 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.perf.conf"
-    elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.cluster-0.bookkeeper.native.ddmq.didi.com ]]; then
+    elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.orangets.native.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
           fi
-          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.cluster-0.conf"
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.orangets.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
