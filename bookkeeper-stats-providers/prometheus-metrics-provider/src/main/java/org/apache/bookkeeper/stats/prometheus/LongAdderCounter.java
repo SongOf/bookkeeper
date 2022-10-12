@@ -17,6 +17,7 @@
 package org.apache.bookkeeper.stats.prometheus;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.bookkeeper.stats.Counter;
@@ -30,7 +31,10 @@ import org.apache.bookkeeper.stats.Counter;
 public class LongAdderCounter implements Counter {
     private final LongAdder counter = new LongAdder();
 
-    private final Map<String, String> labels;
+    private Map<String, String> labels;
+
+    // used for lazy registration for thread scoped metric
+    private boolean threadInitialized;
 
     public LongAdderCounter(Map<String, String> labels) {
         this.labels = labels;
@@ -52,8 +56,18 @@ public class LongAdderCounter implements Counter {
     }
 
     @Override
-    public void add(long delta) {
+    public void addCount(long delta) {
         counter.add(delta);
+    }
+
+    /**
+     * When counter is used to count time.
+     * consistent with the {@link DataSketchesOpStatsLogger#registerSuccessfulEvent(long, TimeUnit)} 's logic
+     * */
+    @Override
+    public void addLatency(long eventLatency, TimeUnit unit) {
+        long valueMillis = unit.toMillis(eventLatency);
+        counter.add(valueMillis);
     }
 
     @Override
@@ -63,5 +77,14 @@ public class LongAdderCounter implements Counter {
 
     public Map<String, String> getLabels() {
         return labels;
+    }
+
+    public boolean isThreadInitialized() {
+        return threadInitialized;
+    }
+
+    public void initializeThread(Map<String, String> labels) {
+        this.labels = labels;
+        this.threadInitialized = true;
     }
 }

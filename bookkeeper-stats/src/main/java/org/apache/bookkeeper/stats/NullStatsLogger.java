@@ -86,7 +86,12 @@ public class NullStatsLogger implements StatsLogger {
         }
 
         @Override
-        public void add(long delta) {
+        public void addCount(long delta) {
+            // nop
+        }
+
+        @Override
+        public void addLatency(long eventLatency, TimeUnit unit) {
             // nop
         }
 
@@ -125,5 +130,15 @@ public class NullStatsLogger implements StatsLogger {
     @Override
     public void removeScope(String name, StatsLogger statsLogger) {
         // nop
+    }
+
+    @Override
+    public OpStatsLogger getThreadScopedOpStatsLogger(String name) {
+        return getOpStatsLogger(name);
+    }
+
+    @Override
+    public Counter getThreadScopedCounter(String name) {
+        return getCounter(name);
     }
 }

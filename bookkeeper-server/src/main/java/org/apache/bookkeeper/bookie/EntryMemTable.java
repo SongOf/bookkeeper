@@ -259,7 +259,7 @@ public class EntryMemTable implements AutoCloseable{
                             }
                         }
                     }
-                    memTableStats.getFlushBytesCounter().add(size);
+                    memTableStats.getFlushBytesCounter().addCount(size);
                     clearSnapshot(keyValues);
                 }
             }

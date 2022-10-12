@@ -20,6 +20,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import java.util.concurrent.TimeUnit;
 import org.apache.bookkeeper.stats.Counter;
 import org.apache.bookkeeper.stats.Gauge;
 import org.apache.bookkeeper.stats.OpStatsLogger;
@@ -70,8 +71,14 @@ public class CodahaleStatsLogger implements StatsLogger {
             }
 
             @Override
-            public void add(long delta) {
+            public void addCount(long delta) {
                 c.inc(delta);
+            }
+
+            @Override
+            public void addLatency(long eventLatency, TimeUnit unit) {
+                long valueMillis = unit.toMillis(eventLatency);
+                c.inc(valueMillis);
             }
         };
     }
@@ -108,5 +115,21 @@ public class CodahaleStatsLogger implements StatsLogger {
     @Override
     public void removeScope(String name, StatsLogger statsLogger) {
         // no-op. the codahale stats logger doesn't have the references for stats logger.
+    }
+
+    /**
+        Thread-scoped stats not currently supported.
+     */
+    @Override
+    public OpStatsLogger getThreadScopedOpStatsLogger(String name) {
+        return getOpStatsLogger(name);
+    }
+
+    /**
+        Thread-scoped stats not currently supported.
+     */
+    @Override
+    public Counter getThreadScopedCounter(String name) {
+        return getCounter(name);
     }
 }

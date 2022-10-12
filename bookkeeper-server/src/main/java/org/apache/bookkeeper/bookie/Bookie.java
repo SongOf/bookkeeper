@@ -21,8 +21,6 @@
 
 package org.apache.bookkeeper.bookie;
 
-import static org.apache.bookkeeper.bookie.BookKeeperServerStats.JOURNAL_MEMORY_MAX;
-import static org.apache.bookkeeper.bookie.BookKeeperServerStats.JOURNAL_MEMORY_USED;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.JOURNAL_SCOPE;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.LD_INDEX_SCOPE;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.LD_LEDGER_SCOPE;
@@ -88,10 +86,8 @@ import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.net.DNS;
 import org.apache.bookkeeper.proto.BookkeeperInternalCallbacks.WriteCallback;
 import org.apache.bookkeeper.proto.SimpleBookieServiceInfoProvider;
-import org.apache.bookkeeper.stats.Gauge;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
-import org.apache.bookkeeper.stats.annotations.StatsDoc;
 import org.apache.bookkeeper.util.BookKeeperConstants;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.bookkeeper.util.IOUtils;
@@ -151,18 +147,6 @@ public class Bookie extends BookieCriticalThread {
     private final ByteBufAllocator allocator;
 
     private final boolean writeDataToJournal;
-
-    @StatsDoc(
-            name = JOURNAL_MEMORY_MAX,
-            help = "The max amount of memory in bytes that can be used by the bookie journal"
-    )
-    private final Gauge<Long> journalMemoryMaxStats;
-
-    @StatsDoc(
-            name = JOURNAL_MEMORY_USED,
-            help = "The actual amount of memory in bytes currently used by the bookie journal"
-    )
-    private final Gauge<Long> journalMemoryUsedStats;
 
     /**
      * Exception is thrown when no such a ledger is found in this bookie.
@@ -834,38 +818,7 @@ public class Bookie extends BookieCriticalThread {
         handles = new HandleFactoryImpl(ledgerStorage);
 
         // Expose Stats
-        this.bookieStats = new BookieStats(statsLogger);
-        journalMemoryMaxStats = new Gauge<Long>() {
-            final long journalMaxMemory = conf.getJournalMaxMemorySizeMb() * 1024 * 1024;
-
-            @Override
-            public Long getDefaultValue() {
-                return journalMaxMemory;
-            }
-
-            @Override
-            public Long getSample() {
-                return journalMaxMemory;
-            }
-        };
-        statsLogger.scope(JOURNAL_SCOPE).registerGauge(JOURNAL_MEMORY_MAX, journalMemoryMaxStats);
-
-        journalMemoryUsedStats = new Gauge<Long>() {
-            @Override
-            public Long getDefaultValue() {
-                return -1L;
-            }
-
-            @Override
-            public Long getSample() {
-                long totalMemory = 0L;
-                for (int i = 0; i < journals.size(); i++) {
-                    totalMemory += journals.get(i).getMemoryUsage();
-                }
-                return totalMemory;
-            }
-        };
-        statsLogger.scope(JOURNAL_SCOPE).registerGauge(JOURNAL_MEMORY_USED, journalMemoryUsedStats);
+        this.bookieStats = new BookieStats(statsLogger, journalDirectories.size(), conf.getJournalQueueSize());
     }
 
     StateManager initializeStateManager() throws IOException {
@@ -1325,7 +1278,7 @@ public class Bookie extends BookieCriticalThread {
         long ledgerId = handle.getLedgerId();
         long entryId = handle.addEntry(entry);
 
-        bookieStats.getWriteBytes().add(entry.readableBytes());
+        bookieStats.getWriteBytes().addCount(entry.readableBytes());
 
         // journal `addEntry` should happen after the entry is added to ledger storage.
         // otherwise the journal entry can potentially be rolled before the ledger is created in ledger storage.
@@ -1503,7 +1456,7 @@ public class Bookie extends BookieCriticalThread {
             }
             ByteBuf entry = handle.readEntry(entryId);
             entrySize = entry.readableBytes();
-            bookieStats.getReadBytes().add(entrySize);
+            bookieStats.getReadBytes().addCount(entrySize);
             success = true;
             return entry;
         } finally {

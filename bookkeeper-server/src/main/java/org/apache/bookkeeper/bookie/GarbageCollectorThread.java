@@ -433,7 +433,7 @@ public class GarbageCollectorThread extends SafeRunnable {
                // We can remove this entry log file now.
                LOG.info("Deleting entryLogId " + entryLogId + " as it has no active ledgers!");
                removeEntryLog(entryLogId);
-               gcStats.getReclaimedSpaceViaDeletes().add(meta.getTotalSize());
+               gcStats.getReclaimedSpaceViaDeletes().addCount(meta.getTotalSize());
            }
 
            totalEntryLogSizeAcc.getAndAdd(meta.getRemainingSize());
@@ -501,7 +501,7 @@ public class GarbageCollectorThread extends SafeRunnable {
 
             long priorRemainingSize = meta.getRemainingSize();
             compactEntryLog(meta);
-            gcStats.getReclaimedSpaceViaCompaction().add(meta.getTotalSize() - priorRemainingSize);
+            gcStats.getReclaimedSpaceViaCompaction().addCount(meta.getTotalSize() - priorRemainingSize);
             compactedBuckets[bucketIndex]++;
         }
         if (LOG.isDebugEnabled()) {
