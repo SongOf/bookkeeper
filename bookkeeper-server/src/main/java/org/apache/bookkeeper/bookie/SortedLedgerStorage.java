@@ -114,6 +114,11 @@ public class SortedLedgerStorage
     }
 
     @Override
+    public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageNotificationListener) {
+        this.interleavedLedgerStorage.setStorageStorageNotificationListener(storageNotificationListener);
+    }
+
+    @Override
     public void start() {
         try {
             flush();

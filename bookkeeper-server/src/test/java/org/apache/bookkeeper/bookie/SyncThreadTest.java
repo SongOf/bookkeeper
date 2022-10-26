@@ -282,6 +282,11 @@ public class SyncThreadTest {
         }
 
         @Override
+        public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageListener) {
+
+        }
+
+        @Override
         public void deleteLedger(long ledgerId) throws IOException {
         }
 

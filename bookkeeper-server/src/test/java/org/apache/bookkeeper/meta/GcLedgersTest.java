@@ -63,6 +63,7 @@ import org.apache.bookkeeper.bookie.EntryLogger;
 import org.apache.bookkeeper.bookie.GarbageCollector;
 import org.apache.bookkeeper.bookie.LastAddConfirmedUpdateNotification;
 import org.apache.bookkeeper.bookie.LedgerDirsManager;
+import org.apache.bookkeeper.bookie.LedgerStorageNotificationListener;
 import org.apache.bookkeeper.bookie.ScanAndCompareGarbageCollector;
 import org.apache.bookkeeper.bookie.StateManager;
 import org.apache.bookkeeper.client.BKException;
@@ -585,6 +586,11 @@ public class GcLedgersTest extends LedgerManagerTestCase {
             Checkpointer checkpointer,
             StatsLogger statsLogger,
             ByteBufAllocator allocator) throws IOException {
+        }
+
+        @Override
+        public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageListener) {
+
         }
 
         @Override

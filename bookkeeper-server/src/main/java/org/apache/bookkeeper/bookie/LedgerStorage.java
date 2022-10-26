@@ -61,6 +61,8 @@ public interface LedgerStorage {
                     ByteBufAllocator allocator)
             throws IOException;
 
+    void setStorageStorageNotificationListener(LedgerStorageNotificationListener ledgerStorageNotificationListener);
+
     /**
      * Start any background threads belonging to the storage system. For example, garbage collection.
      */

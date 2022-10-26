@@ -178,6 +178,11 @@ public class InterleavedLedgerStorage implements CompactableLedgerStorage, Entry
                 statsLogger);
     }
 
+    @Override
+    public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageNotificationListener) {
+        this.gcThread.setStorageStorageNotificationListener(storageNotificationListener);
+    }
+
     @VisibleForTesting
     public void initializeWithEntryLogger(ServerConfiguration conf,
                 LedgerManager ledgerManager,

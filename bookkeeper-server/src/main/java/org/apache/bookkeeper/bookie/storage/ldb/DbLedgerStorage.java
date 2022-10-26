@@ -53,6 +53,7 @@ import org.apache.bookkeeper.bookie.LastAddConfirmedUpdateNotification;
 import org.apache.bookkeeper.bookie.LedgerCache;
 import org.apache.bookkeeper.bookie.LedgerDirsManager;
 import org.apache.bookkeeper.bookie.LedgerStorage;
+import org.apache.bookkeeper.bookie.LedgerStorageNotificationListener;
 import org.apache.bookkeeper.bookie.StateManager;
 import org.apache.bookkeeper.bookie.storage.ldb.KeyValueStorageFactory.DbConfigType;
 import org.apache.bookkeeper.bookie.storage.ldb.SingleDirectoryDbLedgerStorage.LedgerLoggerProcessor;
@@ -166,6 +167,11 @@ public class DbLedgerStorage implements LedgerStorage {
         return new SingleDirectoryDbLedgerStorage(conf, ledgerManager, ledgerDirsManager, indexDirsManager,
                 stateManager, checkpointSource, checkpointer, statsLogger, allocator, gcExecutor, writeCacheSize,
                 readCacheSize);
+    }
+
+    @Override
+    public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageNotificationListener) {
+        ledgerStorageList.forEach(s -> s.setStorageStorageNotificationListener(storageNotificationListener));
     }
 
     @Override

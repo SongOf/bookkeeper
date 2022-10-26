@@ -136,7 +136,8 @@ public class Bookie extends BookieCriticalThread {
 
     private int exitCode = ExitCode.OK;
 
-    private final ConcurrentLongHashMap<byte[]> masterKeyCache = new ConcurrentLongHashMap<>();
+    private final ConcurrentLongHashMap<byte[]> masterKeyCache =
+            ConcurrentLongHashMap.<byte[]>newBuilder().autoShrink(true).build();
 
     protected StateManager stateManager;
 
@@ -693,6 +694,7 @@ public class Bookie extends BookieCriticalThread {
                 statsLogger,
                 UnpooledByteBufAllocator.DEFAULT);
 
+        ledgerStorage.setStorageStorageNotificationListener(LedgerStorageNotificationListener.NULL);
         return ledgerStorage;
     }
 
@@ -814,6 +816,13 @@ public class Bookie extends BookieCriticalThread {
             statsLogger,
             allocator);
 
+        LedgerStorageNotificationListener storageNotificationListener = new LedgerStorageNotificationListener() {
+            @Override
+            public void ledgerRemovedFromStorage(long ledgerId) {
+                masterKeyCache.remove(ledgerId);
+            }
+        };
+        ledgerStorage.setStorageStorageNotificationListener(storageNotificationListener);
 
         handles = new HandleFactoryImpl(ledgerStorage);
 

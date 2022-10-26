@@ -67,7 +67,7 @@ public class LedgerMetadataIndex implements Closeable {
             StatsLogger stats) throws IOException {
         ledgersDb = storageFactory.newKeyValueStorage(basePath, "ledgers", DbConfigType.LedgerMetadata, conf);
 
-        ledgers = new ConcurrentLongHashMap<>();
+        ledgers = ConcurrentLongHashMap.<LedgerData>newBuilder().build();
         ledgersCount = new AtomicInteger();
 
         // Read all ledgers from db

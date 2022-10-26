@@ -62,6 +62,7 @@ import org.apache.bookkeeper.bookie.LedgerCache;
 import org.apache.bookkeeper.bookie.LedgerDirsManager;
 import org.apache.bookkeeper.bookie.LedgerDirsManager.LedgerDirsListener;
 import org.apache.bookkeeper.bookie.LedgerEntryPage;
+import org.apache.bookkeeper.bookie.LedgerStorageNotificationListener;
 import org.apache.bookkeeper.bookie.StateManager;
 import org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorageDataFormats.LedgerData;
 import org.apache.bookkeeper.bookie.storage.ldb.KeyValueStorage.Batch;
@@ -198,8 +199,10 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
         entryLocationIndex = EntryLocationIndex.newInstance(conf,
                 KeyValueStorageRocksDB.factory, indexBaseDir, ledgerIndexDirStatsLogger);
 
-        transientLedgerInfoCache = new ConcurrentLongHashMap<>(16 * 1024,
-                Runtime.getRuntime().availableProcessors() * 2);
+        transientLedgerInfoCache = ConcurrentLongHashMap.<TransientLedgerInfo>newBuilder()
+                .expectedItems(16 * 1024)
+                .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
+                .build();
         cleanupExecutor.scheduleAtFixedRate(this::cleanupStaleTransientLedgerInfo,
                 TransientLedgerInfo.LEDGER_INFO_CACHING_TIME_MINUTES,
                 TransientLedgerInfo.LEDGER_INFO_CACHING_TIME_MINUTES, TimeUnit.MINUTES);
@@ -228,6 +231,11 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             Checkpointer checkpointer, StatsLogger statsLogger,
             ByteBufAllocator allocator) throws IOException {
         /// Initialized in constructor
+    }
+
+    @Override
+    public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageNotificationListener) {
+        this.gcThread.setStorageStorageNotificationListener(storageNotificationListener);
     }
 
     /**

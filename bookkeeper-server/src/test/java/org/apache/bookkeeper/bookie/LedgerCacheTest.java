@@ -687,6 +687,11 @@ public class LedgerCacheTest {
         }
 
         @Override
+        public void setStorageStorageNotificationListener(LedgerStorageNotificationListener storageListener) {
+
+        }
+
+        @Override
         public void process(long ledgerId, long entryId, ByteBuf buffer) throws IOException {
             if (injectFlushException.get() && ((injectFlushExceptionForLedger.get() == FORALLLEDGERS)
                     || (injectFlushExceptionForLedger.get() == ledgerId))) {
