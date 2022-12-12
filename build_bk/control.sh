@@ -378,6 +378,16 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.orangets.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnc-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hnc.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hne-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hne.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hbf-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
