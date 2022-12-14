@@ -383,7 +383,12 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hnc.conf"
-     elif [[ ${SERVICE_CLUSTER_NAME} == hne-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnf-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hnf.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hne-v.level1.bookkeeper.kflower.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
           fi
