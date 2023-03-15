@@ -49,6 +49,7 @@ public abstract class EntryLocationIndex implements Closeable {
     protected final ConcurrentLongHashSet deletedLedgers = ConcurrentLongHashSet.newBuilder().build();
 
     private final EntryLocationIndexStats stats;
+    private boolean isCompacting;
 
     public EntryLocationIndex(ServerConfiguration conf, KeyValueStorageFactory storageFactory, String basePath,
             StatsLogger stats) throws IOException {
@@ -160,6 +161,23 @@ public abstract class EntryLocationIndex implements Closeable {
     }
 
     protected static final int DELETE_ENTRIES_BATCH_SIZE = 100000;
+
+    public String getEntryLocationDBPath() {
+        return locationsDb.getDBPath();
+    }
+
+    public void compact() throws IOException {
+        try {
+            isCompacting = true;
+            locationsDb.compact();
+        } finally {
+            isCompacting = false;
+        }
+    }
+
+    public boolean isCompacting() {
+        return isCompacting;
+    }
 
     public void removeOffsetFromDeletedLedgers() throws IOException {
         LongPairWrapper firstKeyWrapper = LongPairWrapper.get(-1, -1);

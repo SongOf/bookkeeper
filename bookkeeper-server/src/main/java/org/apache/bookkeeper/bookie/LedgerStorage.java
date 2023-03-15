@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
 
@@ -202,6 +203,57 @@ public interface LedgerStorage {
      */
     default void forceGC() {
         return;
+    }
+
+    /**
+     * Force trigger Garbage Collection with forceMajor or forceMinor parameter.
+     */
+    default void forceGC(Boolean forceMajor, Boolean forceMinor) {
+        return;
+    }
+
+    default void suspendMinorGC() {
+        return;
+    }
+
+    default void suspendMajorGC() {
+        return;
+    }
+
+    default void resumeMinorGC() {
+        return;
+    }
+
+    default void resumeMajorGC() {
+        return;
+    }
+
+    default boolean isMajorGcSuspended() {
+        return false;
+    }
+
+    default boolean isMinorGcSuspended() {
+        return false;
+    }
+
+    default void entryLocationCompact() {
+        return;
+    }
+
+    default void entryLocationCompact(List<String> locations) {
+        return;
+    }
+
+    default boolean isEntryLocationCompacting() {
+        return false;
+    }
+
+    default Map<String, Boolean> isEntryLocationCompacting(List<String> locations) {
+        return Collections.emptyMap();
+    }
+
+    default List<String> getEntryLocationDBPath() {
+        return Collections.emptyList();
     }
 
     /**

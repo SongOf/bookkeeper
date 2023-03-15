@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
+import com.google.common.collect.Maps;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -36,7 +36,9 @@ import io.netty.util.internal.PlatformDependent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PrimitiveIterator.OfLong;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -364,6 +366,77 @@ public class DbLedgerStorage implements LedgerStorage {
     @Override
     public boolean isInForceGC() {
         return ledgerStorageList.stream().anyMatch(SingleDirectoryDbLedgerStorage::isInForceGC);
+    }
+
+    @Override
+    public void suspendMinorGC() {
+        ledgerStorageList.stream().forEach(SingleDirectoryDbLedgerStorage::suspendMinorGC);
+    }
+
+    @Override
+    public void suspendMajorGC() {
+        ledgerStorageList.stream().forEach(SingleDirectoryDbLedgerStorage::suspendMajorGC);
+    }
+
+    @Override
+    public void resumeMinorGC() {
+        ledgerStorageList.stream().forEach(SingleDirectoryDbLedgerStorage::resumeMinorGC);
+    }
+
+    @Override
+    public void resumeMajorGC() {
+        ledgerStorageList.stream().forEach(SingleDirectoryDbLedgerStorage::resumeMajorGC);
+    }
+
+    @Override
+    public boolean isMajorGcSuspended() {
+        return ledgerStorageList.stream().allMatch(SingleDirectoryDbLedgerStorage::isMajorGcSuspended);
+    }
+
+    @Override
+    public boolean isMinorGcSuspended() {
+        return ledgerStorageList.stream().allMatch(SingleDirectoryDbLedgerStorage::isMinorGcSuspended);
+    }
+
+    @Override
+    public void entryLocationCompact() {
+        ledgerStorageList.forEach(SingleDirectoryDbLedgerStorage::entryLocationCompact);
+    }
+
+    @Override
+    public void entryLocationCompact(List<String> locations) {
+        for (SingleDirectoryDbLedgerStorage ledgerStorage : ledgerStorageList) {
+            String entryLocation = ledgerStorage.getEntryLocationDBPath().get(0);
+            if (locations.contains(entryLocation)) {
+                ledgerStorage.entryLocationCompact();
+            }
+        }
+    }
+
+    @Override
+    public boolean isEntryLocationCompacting() {
+        return ledgerStorageList.stream().anyMatch(SingleDirectoryDbLedgerStorage::isEntryLocationCompacting);
+    }
+
+    @Override
+    public Map<String, Boolean> isEntryLocationCompacting(List<String> locations) {
+        HashMap<String, Boolean> isCompacting = Maps.newHashMap();
+        for (SingleDirectoryDbLedgerStorage ledgerStorage : ledgerStorageList) {
+            String entryLocation = ledgerStorage.getEntryLocationDBPath().get(0);
+            if (locations.contains(entryLocation)) {
+                isCompacting.put(entryLocation, ledgerStorage.isEntryLocationCompacting());
+            }
+        }
+        return isCompacting;
+    }
+
+    @Override
+    public List<String> getEntryLocationDBPath() {
+        List<String> allEntryLocationDBPath = Lists.newArrayList();
+        for (SingleDirectoryDbLedgerStorage ledgerStorage : ledgerStorageList) {
+            allEntryLocationDBPath.addAll(ledgerStorage.getEntryLocationDBPath());
+        }
+        return allEntryLocationDBPath;
     }
 
     @Override
