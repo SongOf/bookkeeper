@@ -17,7 +17,7 @@
 # under the License.
 #
 
-FROM registry.intra.xiaojukeji.com/mq/dop-bookkeeper:stable
+FROM registry.xiaojukeji.com/mq/dop-bookkeeper:stable
 
 COPY 899-logsymbol.required.sh  /etc/container/init/
 COPY 990-startservice.required.sh  /etc/container/init/
