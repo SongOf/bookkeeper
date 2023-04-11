@@ -103,12 +103,11 @@ public abstract class EntryLocationIndex implements Closeable {
     }
 
     private long getLastEntryInLedgerInternal(long ledgerId) throws IOException {
-        LongPairWrapper maxEntryId = LongPairWrapper.get(ledgerId, Long.MAX_VALUE);
-
         boolean ledgerExists = quickCheckLedgerExists(ledgerId);
-        if (ledgerExists == false) {
+        if (!ledgerExists) {
             throw new Bookie.NoEntryException(ledgerId, -1);
         }
+        LongPairWrapper maxEntryId = LongPairWrapper.get(ledgerId, Long.MAX_VALUE);
         // Search the last entry in storage
         Entry<byte[], byte[]> entry = locationsDb.getFloor(maxEntryId.array);
         maxEntryId.recycle();
