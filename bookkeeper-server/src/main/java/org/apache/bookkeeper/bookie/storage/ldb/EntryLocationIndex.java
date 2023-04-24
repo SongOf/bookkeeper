@@ -138,9 +138,9 @@ public abstract class EntryLocationIndex implements Closeable {
      */
     private boolean quickCheckLedgerExists(long ledgerId) {
         try {
-            LongPairWrapper firstKeyWrapper = LongPairWrapper.get(-1, -1);
-            firstKeyWrapper.set(ledgerId, 0);
+            LongPairWrapper firstKeyWrapper = LongPairWrapper.get(ledgerId, 0);
             Entry<byte[], byte[]> firstKeyRes = locationsDb.getCeil(firstKeyWrapper.array);
+            firstKeyWrapper.recycle();
             if (firstKeyRes == null || ArrayUtil.getLong(firstKeyRes.getKey(), 0) != ledgerId) {
                 // No entries found for ledger
                 if (log.isDebugEnabled()) {
