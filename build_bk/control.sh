@@ -408,6 +408,11 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.us01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == xna-v.level2.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.styd.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
