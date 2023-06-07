@@ -27,6 +27,8 @@ import io.netty.buffer.Unpooled;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A Buffered channel without a write buffer. Only reads are buffered.
@@ -61,17 +63,18 @@ public class BufferedReadChannel extends BufferedChannelBase  {
      *         -1 if the given position is greater than or equal to the file's current size.
      * @throws IOException if I/O error occurs
      */
-    public int read(ByteBuf dest, long pos) throws IOException {
+    public Pair<Integer, Integer> read(ByteBuf dest, long pos) throws IOException {
         return read(dest, pos, dest.writableBytes());
     }
 
-    public synchronized int read(ByteBuf dest, long pos, int length) throws IOException {
+    public synchronized Pair<Integer, Integer> read(ByteBuf dest, long pos, int length) throws IOException {
         invocationCount++;
         long currentPosition = pos;
         long eof = validateAndGetFileChannel().size();
+        int bytesFetchedFromFile = 0;
         // return -1 if the given position is greater than or equal to the file's current size.
         if (pos >= eof) {
-            return -1;
+            return Pair.of(-1, 0);
         }
         while (length > 0) {
             // Check if the data is in the buffer, if so, copy it.
@@ -95,9 +98,10 @@ public class BufferedReadChannel extends BufferedChannelBase  {
                     throw new IOException("Reading from filechannel returned a non-positive value. Short read.");
                 }
                 readBuffer.writerIndex(readBytes);
+                bytesFetchedFromFile += readBytes;
             }
         }
-        return (int) (currentPosition - pos);
+        return Pair.of((int) (currentPosition - pos), bytesFetchedFromFile);
     }
 
     public synchronized void clear() {

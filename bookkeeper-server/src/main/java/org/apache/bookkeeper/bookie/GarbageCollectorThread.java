@@ -123,6 +123,8 @@ public class GarbageCollectorThread extends SafeRunnable {
 
     private static final AtomicLong threadNum = new AtomicLong(0);
 
+    final AbstractLogCompactor.Throttler throttler;
+
     private LedgerStorageNotificationListener storageNotificationListener = LedgerStorageNotificationListener.NULL;
     /**
      * Create a garbage collector thread.
@@ -223,7 +225,7 @@ public class GarbageCollectorThread extends SafeRunnable {
                 isForceMajorCompactionAllow = true;
             }
         }
-
+        this.throttler = new AbstractLogCompactor.Throttler(conf);
         if (majorCompactionInterval > 0 && majorCompactionThreshold > 0) {
             if (majorCompactionThreshold > 1.0f) {
                 throw new IOException("Invalid major compaction threshold "
@@ -627,7 +629,7 @@ public class GarbageCollectorThread extends SafeRunnable {
 
             try {
                 // Read through the entry log file and extract the entry log meta
-                EntryLogMetadata entryLogMeta = entryLogger.getEntryLogMetadata(entryLogId);
+                EntryLogMetadata entryLogMeta = entryLogger.getEntryLogMetadata(entryLogId, throttler);
                 removeIfLedgerNotExists(entryLogMeta);
                 if (entryLogMeta.isEmpty()) {
                     entryLogger.removeEntryLog(entryLogId);

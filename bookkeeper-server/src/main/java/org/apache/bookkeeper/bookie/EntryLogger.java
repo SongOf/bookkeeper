@@ -62,6 +62,7 @@ import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.bookkeeper.util.IOUtils;
 import org.apache.bookkeeper.util.collections.ConcurrentLongLongHashMap;
 import org.apache.bookkeeper.util.collections.ConcurrentLongLongHashMap.BiConsumerLong;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -414,8 +415,10 @@ public class EntryLogger {
      * @param pos The starting position from where we want to read.
      * @return
      */
-    private int readFromLogChannel(long entryLogId, BufferedReadChannel channel, ByteBuf buff, long pos)
-            throws IOException {
+    private Pair<Integer, Integer> readFromLogChannel(long entryLogId,
+                                                      BufferedReadChannel channel,
+                                                      ByteBuf buff,
+                                                      long pos) throws IOException {
         BufferedLogChannel bc = entryLogManager.getCurrentLogIfPresent(entryLogId);
         if (null != bc) {
             synchronized (bc) {
@@ -783,7 +786,7 @@ public class EntryLogger {
         long entrySizePos = pos - 4; // we want to get the entrySize as well as the ledgerId and entryId
 
         try {
-            if (readFromLogChannel(entryLogId, fc, sizeBuff, entrySizePos) != sizeBuff.capacity()) {
+            if (readFromLogChannel(entryLogId, fc, sizeBuff, entrySizePos).getLeft() != sizeBuff.capacity()) {
                 throw new EntryLookupException.MissingEntryException(ledgerId, entryId, entryLogId, entrySizePos);
             }
         } catch (BufferedChannelBase.BufferedChannelClosedException | AsynchronousCloseException e) {
@@ -846,7 +849,7 @@ public class EntryLogger {
         }
 
         ByteBuf data = allocator.buffer(entrySize, entrySize);
-        int rc = readFromLogChannel(entryLogId, fc, data, pos);
+        int rc = readFromLogChannel(entryLogId, fc, data, pos).getLeft();
         if (rc != entrySize) {
             // Note that throwing NoEntryException here instead of IOException is not
             // without risk. If all bookies in a quorum throw this same exception
@@ -982,6 +985,19 @@ public class EntryLogger {
      * @throws IOException
      */
     public void scanEntryLog(long entryLogId, EntryLogScanner scanner) throws IOException {
+        scanEntryLog(entryLogId, scanner, null);
+    }
+
+    /**
+     * Scan entry log.
+     *
+     * @param entryLogId Entry Log Id
+     * @param scanner    Entry Log Scanner
+     * @param throttler  throttle for the scan
+     * @throws IOException
+     */
+    public void scanEntryLog(long entryLogId, EntryLogScanner scanner, AbstractLogCompactor.Throttler throttler)
+            throws IOException {
         // Buffer where to read the entrySize (4 bytes) and the ledgerId (8 bytes)
         ByteBuf headerBuffer = Unpooled.buffer(4 + 8);
         BufferedReadChannel bc;
@@ -1007,10 +1023,17 @@ public class EntryLogger {
                 if (pos >= bc.size()) {
                     break;
                 }
-                if (readFromLogChannel(entryLogId, bc, headerBuffer, pos) != headerBuffer.capacity()) {
+
+                Pair<Integer, Integer> readBytesPair = readFromLogChannel(entryLogId, bc, headerBuffer, pos);
+                if (readBytesPair.getLeft() != headerBuffer.capacity()) {
                     LOG.warn("Short read for entry size from entrylog {}", entryLogId);
                     return;
                 }
+
+                if (throttler != null && readBytesPair.getRight() > 0) {
+                    throttler.acquire(readBytesPair.getRight());
+                }
+
                 long offset = pos;
                 pos += 4;
                 int entrySize = headerBuffer.readInt();
@@ -1030,7 +1053,7 @@ public class EntryLogger {
                     return;
                 }
                 data.capacity(entrySize);
-                int rc = readFromLogChannel(entryLogId, bc, data, pos);
+                int rc = readFromLogChannel(entryLogId, bc, data, pos).getLeft();
                 if (rc != entrySize) {
                     LOG.warn("Short read for ledger entry from entryLog {}@{} ({} != {})",
                             entryLogId, pos, rc, entrySize);
@@ -1048,7 +1071,7 @@ public class EntryLogger {
     }
 
     public EntryLogMetadata getEntryLogMetadata(long entryLogId) throws IOException {
-        // First try to extract the EntryLogMetada from the index, if there's no index then fallback to scanning the
+        // First try to extract the EntryLogMetadata from the index, if there's no index then fallback to scanning the
         // entry log
         try {
             return extractEntryLogMetadataFromIndex(entryLogId);
@@ -1057,6 +1080,20 @@ public class EntryLogger {
 
             // Fall-back to scanning
             return extractEntryLogMetadataByScanning(entryLogId);
+        }
+    }
+
+    public EntryLogMetadata getEntryLogMetadata(long entryLogId, AbstractLogCompactor.Throttler throttler)
+            throws IOException {
+        // First try to extract the EntryLogMetadata from the index, if there's no index then fallback to scanning the
+        // entry log
+        try {
+            return extractEntryLogMetadataFromIndex(entryLogId);
+        } catch (Exception e) {
+            LOG.info("Failed to get ledgers map index from: {}.log : {}", entryLogId, e.getMessage());
+
+            // Fall-back to scanning
+            return extractEntryLogMetadataByScanning(entryLogId, throttler);
         }
     }
 
@@ -1144,12 +1181,21 @@ public class EntryLogger {
     }
 
     private EntryLogMetadata extractEntryLogMetadataByScanning(long entryLogId) throws IOException {
+        return extractEntryLogMetadataByScanning(entryLogId, null);
+    }
+
+    private EntryLogMetadata extractEntryLogMetadataByScanning(long entryLogId,
+                                                               AbstractLogCompactor.Throttler throttler)
+            throws IOException {
         final EntryLogMetadata meta = new EntryLogMetadata(entryLogId, conf.getEntryLogLedgerMapConcurrency());
 
         // Read through the entry log file and extract the entry log meta
         scanEntryLog(entryLogId, new EntryLogScanner() {
             @Override
             public void process(long ledgerId, long offset, ByteBuf entry) throws IOException {
+                if (throttler != null) {
+                    throttler.acquire(entry.readableBytes());
+                }
                 // add new entry size of a ledger to entry log meta
                 meta.addLedgerSize(ledgerId, entry.readableBytes() + 4);
             }
