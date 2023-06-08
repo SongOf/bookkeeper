@@ -130,6 +130,7 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
     private final long writeCacheMaxSize;
     private final long readCacheMaxSize;
     private final int readAheadCacheBatchSize;
+    private final long readAheadCacheBatchBytesSize;
 
     private final long maxThrottleTimeNanos;
 
@@ -137,6 +138,9 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
     static final String READ_AHEAD_CACHE_BATCH_SIZE = "dbStorage_readAheadCacheBatchSize";
     private static final int DEFAULT_READ_AHEAD_CACHE_BATCH_SIZE = 100;
+    static final String READ_AHEAD_CACHE_BATCH_BYTES_SIZE = "dbStorage_readAheadCacheBatchBytesSize";
+    // the default value is -1. this feature(limit of read ahead bytes) is disabled
+    private static final int DEFAULT_READ_AHEAD_CACHE_BATCH_BYTES_SIZE = -1;
 
     private static final long DEFAULT_MAX_THROTTLE_TIME_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
@@ -184,6 +188,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
 
         readCacheMaxSize = readCacheSize;
         readAheadCacheBatchSize = conf.getInt(READ_AHEAD_CACHE_BATCH_SIZE, DEFAULT_READ_AHEAD_CACHE_BATCH_SIZE);
+        readAheadCacheBatchBytesSize = conf.getInt(READ_AHEAD_CACHE_BATCH_BYTES_SIZE,
+                DEFAULT_READ_AHEAD_CACHE_BATCH_BYTES_SIZE);
 
         // Do not attempt to perform read-ahead more than half the total size of the cache
         maxReadAheadBytesSize = readCacheMaxSize / 2;
@@ -532,9 +538,8 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
             int count = 0;
             long size = 0;
 
-            while (count < readAheadCacheBatchSize
-                    && size < maxReadAheadBytesSize
-                    && currentEntryLogId == firstEntryLogId) {
+            while (currentEntryLogId == firstEntryLogId && chargeReadAheadCache(count, size)) {
+
                 ByteBuf entry = entryLogger.internalReadEntry(orginalLedgerId, firstEntryId, currentEntryLocation,
                         false /* validateEntry */);
 
@@ -568,6 +573,22 @@ public class SingleDirectoryDbLedgerStorage implements CompactableLedgerStorage 
                 log.debug("Exception during read ahead for ledger: {}: e", orginalLedgerId, e);
             }
         }
+    }
+
+    protected boolean chargeReadAheadCache(int currentReadAheadCount, long currentReadAheadBytes) {
+        // compatible with old logic
+        boolean chargeSizeCondition = currentReadAheadCount < readAheadCacheBatchSize
+                && currentReadAheadBytes < maxReadAheadBytesSize;
+        if (chargeSizeCondition && readAheadCacheBatchBytesSize > 0) {
+            // exact limits limit the size and count for each batch
+            chargeSizeCondition = currentReadAheadBytes < readAheadCacheBatchBytesSize;
+        }
+        return chargeSizeCondition;
+    }
+
+    @VisibleForTesting
+    DbLedgerStorageStats getDbLedgerStorageStats() {
+        return dbLedgerStorageStats;
     }
 
     public ByteBuf getLastEntry(long ledgerId) throws IOException {
