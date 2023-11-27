@@ -428,7 +428,7 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.styd.conf"
-     elif [[ ${SERVICE_CLUSTER_NAME} == hbd-sim-v.bookkeeper.rt.native.ddmq.didi.com ]]; then
+     elif [[ ${SERVICE_CLUSTER_NAME} == hbd-hbdsim-v.bookkeeper.rt.native.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'----------
           fi
