@@ -343,6 +343,37 @@ function init_server_info() {
              check_ssd 'data0'
          fi
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level3-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-pro.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level3-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level1-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-pro.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level1-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-pro.gz01.conf"
+
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
         if [[ ${is_check_ssd} == "true" ]];then
             check_ssd 'data0'
