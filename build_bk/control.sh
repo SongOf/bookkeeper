@@ -348,6 +348,11 @@ function init_server_info() {
              check_ssd 'data0'
          fi
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.map-air.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.map-air.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.map-air.gz01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level3.bookkeeper.dop.ddmq.didi.com ]]; then
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'

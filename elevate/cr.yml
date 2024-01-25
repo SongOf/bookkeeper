@@ -1,5 +1,5 @@
-reviewers: huangzegui,houxiaoyu,leohuangqiang,congbo,licen,yangxinjian,hechen
-owners: huangzegui,houxiaoyu,leohuangqiang,congbo,licen,yangxinjian,hechen
+reviewers: huangzegui,houxiaoyu,leohuangqiang,congbo,licen,yangxinjian,hechen,maxlisongsong,houbonan
+owners: huangzegui,houxiaoyu,leohuangqiang,congbo,licen,yangxinjian,hechen,maxlisongsong,houbonan
 strategy: default
 force: 4.14-dop
 exceptSelfAccept: true
