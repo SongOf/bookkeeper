@@ -388,6 +388,16 @@ function init_server_info() {
                   check_ssd 'data0'
               fi
               BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnc-v.level1-air.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hnc.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnf-v.level1-air.bookkeeper.dop.ddmq.didi.com ]]; then
+              if [[ ${is_check_ssd} == "true" ]];then
+                  check_ssd 'data0'
+              fi
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hnf.conf"
 
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
         if [[ ${is_check_ssd} == "true" ]];then
@@ -434,6 +444,11 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hnc.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus01-v.level3-air.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.pus01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == pus01-v.level3.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
@@ -444,6 +459,11 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.pus02.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus02-v.level3-air.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.pus02.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnf-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
@@ -454,6 +474,11 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.hne.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hne-v.level1-air.bookkeeper.kflower.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hne.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hbf-v.level1.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
@@ -469,11 +494,21 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.us01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == us01-v.level2-air.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-air.us01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == xna-v.level2.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.styd.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == xna-v.level2-air.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-air.styd.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hbd-hbdsim-v.bookkeeper.rt.native.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'----------
