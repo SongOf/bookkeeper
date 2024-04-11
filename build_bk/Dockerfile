@@ -25,7 +25,8 @@ COPY supervisor-bookkeeper.conf /etc/supervisord.d/
 
 ENV DEPLOY_DISF_NOT_NEED_START 1
 ENV DEPLOY_APOLLO_NOT_NEED_START 1
-
+# yum -y update tzdata 这个命令专为 sofi环境校正夏令时设置
+RUN yum -y update tzdata
 RUN mkdir /home/xiaoju/pulsar_bk/
 RUN ls -alh
 RUN tar -zxf /home/xiaoju/dop_bookkeeper_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_bk/ --strip-components 1
