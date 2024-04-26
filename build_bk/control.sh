@@ -519,6 +519,11 @@ function init_server_info() {
             check_ssd 'data0'
         fi
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnc-v.bike-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+        if [[ ${is_check_ssd} == "true" ]];then
+            check_ssd 'data0'
+        fi
+        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.bike-pro.hnc.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
