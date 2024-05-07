@@ -19,9 +19,11 @@
 package org.apache.bookkeeper.meta;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import org.apache.bookkeeper.common.annotation.InterfaceAudience.LimitedPrivate;
 import org.apache.bookkeeper.common.annotation.InterfaceStability.Evolving;
+import org.apache.bookkeeper.common.concurrent.FutureUtils;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.discover.RegistrationClient;
 import org.apache.bookkeeper.meta.exceptions.MetadataException;
@@ -103,4 +105,13 @@ public interface MetadataClientDriver extends AutoCloseable {
      *            listener listening on metadata client session states.
      */
     void setSessionStateListener(SessionStateListener sessionStateListener);
+
+    /**
+     * Return driver metadata service is available.
+     *
+     * @return the metadata service is available.
+     */
+    default CompletableFuture<Boolean> isMetadataServiceAvailable() {
+        return FutureUtils.value(true);
+    }
 }

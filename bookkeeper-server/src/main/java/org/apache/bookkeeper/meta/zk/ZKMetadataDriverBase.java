@@ -28,6 +28,7 @@ import static org.apache.bookkeeper.util.BookKeeperConstants.INSTANCEID_LOCK;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.Getter;
@@ -52,6 +53,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.ACL;
@@ -63,6 +65,8 @@ import org.apache.zookeeper.data.ACL;
 public class ZKMetadataDriverBase implements AutoCloseable {
 
     protected static final String SCHEME = "zk";
+
+    protected volatile boolean metadataServiceAvailable;
 
     public static String getZKServersFromServiceUri(URI uri) {
         String authority = uri.getAuthority();
@@ -305,6 +309,12 @@ public class ZKMetadataDriverBase implements AutoCloseable {
                     .sessionTimeoutMs(conf.getZkTimeout())
                     .operationRetryPolicy(zkRetryPolicy)
                     .requestRateLimit(conf.getZkRequestRateLimit())
+                    .watchers(Collections.singleton(watchedEvent -> {
+                        if (log.isDebugEnabled()) {
+                           log.debug("Got ZK session watch event: {}", watchedEvent);
+                        }
+                        handleState(watchedEvent.getState());
+                    }))
                     .statsLogger(statsLogger)
                     .build();
 
@@ -340,6 +350,18 @@ public class ZKMetadataDriverBase implements AutoCloseable {
             zk,
             ledgersRootPath,
             acls);
+    }
+
+    private synchronized void handleState(Watcher.Event.KeeperState zkClientState) {
+        switch (zkClientState) {
+            case Expired:
+            case Disconnected:
+                this.metadataServiceAvailable = false;
+                break;
+
+            default:
+                this.metadataServiceAvailable = true;
+        }
     }
 
     public LayoutManager getLayoutManager() {

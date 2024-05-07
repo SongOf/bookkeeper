@@ -71,6 +71,7 @@ dependencies {
     annotationProcessor depLibs.lombok
     testAnnotationProcessor depLibs.lombok
     testImplementation depLibs.slf4jLog4j
+    testImplementation depLibs.awaitility
 }
 
 test {

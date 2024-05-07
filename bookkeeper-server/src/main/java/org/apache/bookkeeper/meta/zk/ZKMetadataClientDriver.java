@@ -19,6 +19,7 @@
 package org.apache.bookkeeper.meta.zk;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,5 +105,9 @@ public class ZKMetadataClientDriver
                 sessionStateListener.onSessionExpired();
             }
         });
+    }
+
+    public synchronized CompletableFuture<Boolean> isMetadataServiceAvailable() {
+        return CompletableFuture.completedFuture(metadataServiceAvailable);
     }
 }

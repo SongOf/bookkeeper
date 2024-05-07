@@ -80,6 +80,7 @@ depVersions = [
     vertx: "3.9.2",
     yahooDatasketches: "0.8.3",
     zookeeper: "3.6.2",
+    awaitility: "4.2.0",
 ]
 
 depLibs = [
@@ -164,5 +165,6 @@ depLibs = [
     vertxWeb: "io.vertx:vertx-web:${depVersions.vertx}",
     yahooDatasketches: "com.yahoo.datasketches:sketches-core:${depVersions.yahooDatasketches}",
     zookeeper: "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}",
-    zookeeperTest: "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}:tests"
+    zookeeperTest: "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}:tests",
+    awaitility: "org.awaitility:awaitility:${depVersions.awaitility}"
 ]
