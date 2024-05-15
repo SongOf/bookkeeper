@@ -103,10 +103,6 @@ public abstract class EntryLocationIndex implements Closeable {
     }
 
     private long getLastEntryInLedgerInternal(long ledgerId) throws IOException {
-        boolean ledgerExists = quickCheckLedgerExists(ledgerId);
-        if (!ledgerExists) {
-            throw new Bookie.NoEntryException(ledgerId, -1);
-        }
         LongPairWrapper maxEntryId = LongPairWrapper.get(ledgerId, Long.MAX_VALUE);
         // Search the last entry in storage
         Entry<byte[], byte[]> entry = locationsDb.getFloor(maxEntryId.array);
@@ -127,31 +123,6 @@ public abstract class EntryLocationIndex implements Closeable {
                 throw new Bookie.NoEntryException(ledgerId, -1);
             }
         }
-    }
-
-    /**
-     * quickCheckLedgerExists main functions:
-     * if ledger not exists, just run locationsDb.getCeil cost a few milliseconds,
-     * instead of direct to run locationsDb.getFloor cost dozens of seconds
-     * @param ledgerId
-     * @return
-     */
-    private boolean quickCheckLedgerExists(long ledgerId) {
-        try {
-            LongPairWrapper firstKeyWrapper = LongPairWrapper.get(ledgerId, 0);
-            Entry<byte[], byte[]> firstKeyRes = locationsDb.getCeil(firstKeyWrapper.array);
-            firstKeyWrapper.recycle();
-            if (firstKeyRes == null || ArrayUtil.getLong(firstKeyRes.getKey(), 0) != ledgerId) {
-                // No entries found for ledger
-                if (log.isDebugEnabled()) {
-                    log.debug("No entries found for ledger {}", ledgerId);
-                }
-                return false;
-            }
-        } catch (Throwable e) {
-            log.warn("check ledger({}) exists has error:{}", ledgerId, e);
-        }
-        return true;
     }
 
     public abstract void addLocation(long ledgerId, long entryId, long location) throws IOException;
