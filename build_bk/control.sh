@@ -316,6 +316,11 @@ function init_server_info() {
              check_ssd 'data0'
          fi
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview-air.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-pre-v.preview.preview-bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+         fi
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.hna.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level4.bookkeeper.dop.ddmq.didi.com ]]; then
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
