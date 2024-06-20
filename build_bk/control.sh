@@ -544,6 +544,11 @@ function init_server_info() {
               check_ssd 'data0'----------
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-public.hnb.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.rt-public.bookkeeper.native.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'----------
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-public.hnd.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.rt-core.bookkeeper.native.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'----------
