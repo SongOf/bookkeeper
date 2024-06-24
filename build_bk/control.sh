@@ -335,6 +335,7 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
              check_ssd 'data1'
+             check_ssd 'data5'
              check_ssd 'data10'
          fi
          export BOOKIE_MEM_OPTS="-Xms60G -Xmx60G -XX:MaxDirectMemorySize=60G"
