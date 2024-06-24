@@ -330,7 +330,7 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
          fi
-         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.jy01.conf"
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.level2-pro.bookkeeper.dop.ddmq.didi.com ]]; then
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
