@@ -330,7 +330,15 @@ function init_server_info() {
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
          fi
-         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1.conf"
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.jy01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.level2-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+             check_ssd 'data1'
+             check_ssd 'data10'
+         fi
+         export BOOKIE_MEM_OPTS="-Xms60G -Xmx60G -XX:MaxDirectMemorySize=60G"
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.jy01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2.bookkeeper.dop.ddmq.didi.com ]]; then
          if [[ ${is_check_ssd} == "true" ]];then
              check_ssd 'data0'
