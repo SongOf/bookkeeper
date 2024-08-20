@@ -17,7 +17,7 @@
 # under the License.
 #
 
-FROM registry.xiaojukeji.com/mq/sre-didi-centos7-base-v2-jdk11013:stable
+FROM registry.xiaojukeji.com/mq/dop-bookkeeper:stable
 
 COPY 899-logsymbol.required.sh  /etc/container/init/
 COPY 990-startservice.required.sh  /etc/container/init/
@@ -27,9 +27,8 @@ ENV DEPLOY_DISF_NOT_NEED_START 1
 ENV DEPLOY_APOLLO_NOT_NEED_START 1
 # yum -y update tzdata 这个命令专为 sofi环境校正夏令时设置
 RUN yum -y update tzdata
-RUN mkdir -p /home/xiaoju/pulsar_autorecovery/
-RUN mkdir -p /home/xiaoju/dop_autorecovery_tmp/
-COPY bookkeeper-server-*-bin.tar.gz /home/xiaoju/dop_autorecovery_tmp/
-RUN tar -zxf /home/xiaoju/dop_autorecovery_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_autorecovery/ --strip-components 1
+RUN mkdir /home/xiaoju/pulsar_autorecovery/
+RUN ls -alh
+RUN tar -zxf /home/xiaoju/dop_bookkeeper_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_autorecovery/ --strip-components 1
+RUN rm -rf /home/xiaoju/dop_bookkeeper_tmp
 COPY control.sh /home/xiaoju/pulsar_autorecovery/control.sh
-RUN chown -R xiaoju.xiaoju /home/xiaoju/*
