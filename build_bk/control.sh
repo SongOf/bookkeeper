@@ -408,7 +408,7 @@ function init_server_info() {
               if [[ ${is_check_ssd} == "true" ]];then
                   check_ssd 'data1'
               fi
-              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-pro.pus05.conf"
+              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.pus05.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level1-air.bookkeeper.dop.ddmq.didi.com ]]; then
               if [[ ${is_check_ssd} == "true" ]];then
                   check_ssd 'data0'
@@ -460,6 +460,11 @@ function init_server_info() {
              *)
              BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf.conf";;
          esac
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-j2ssdl2ssd-v.perf.bookkeeper.dop.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-j2ssdl2ssd.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-v.perf.preview-bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
@@ -590,6 +595,21 @@ function init_server_info() {
               check_ssd 'data0'----------
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.perf.pre.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.rt-core-pro.bookkeeper.native.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'----------
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.hnd.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.rt-public-pro.bookkeeper.native.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'----------
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-public.hnd.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus05-v.rt-core-pro.bookkeeper.native.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'----------
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.pus05.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
