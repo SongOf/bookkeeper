@@ -610,6 +610,11 @@ function init_server_info() {
               check_ssd 'data0'----------
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.pus05.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == us01-v.rt-core.bookkeeper.native.ddmq.didi.com ]]; then
+          if [[ ${is_check_ssd} == "true" ]];then
+              check_ssd 'data0'----------
+          fi
+          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.us01.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
