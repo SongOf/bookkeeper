@@ -32,3 +32,5 @@ RUN ls -alh
 RUN tar -zxf /home/xiaoju/dop_bookkeeper_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_autorecovery/ --strip-components 1
 RUN rm -rf /home/xiaoju/dop_bookkeeper_tmp
 COPY control.sh /home/xiaoju/pulsar_autorecovery/control.sh
+COPY bookie-rack-resolver.sh /home/xiaoju/pulsar_autorecovery/bookie-rack-resolver.sh
+RUN chmod +x /home/xiaoju/pulsar_autorecovery/bookie-rack-resolver.sh
