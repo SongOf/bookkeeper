@@ -616,19 +616,28 @@ function init_server_info() {
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.us01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-pro.bookkeeper.dop.ddmq.didi.com ]]; then
-        if [[ ${is_check_ssd} == "true" ]];then
-            check_ssd 'data0'
-        fi
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+             check_ssd 'data1'
+             check_ssd 'data5'
+             check_ssd 'data10'
+         fi
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.gz01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-air.bookkeeper.dop.ddmq.didi.com ]]; then
-        if [[ ${is_check_ssd} == "true" ]];then
-            check_ssd 'data0'
-        fi
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+             check_ssd 'data1'
+             check_ssd 'data5'
+             check_ssd 'data10'
+         fi
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-air.gz01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level3-S2103-air.bookkeeper.dop.ddmq.didi.com ]]; then
-        if [[ ${is_check_ssd} == "true" ]];then
-            check_ssd 'data0'
-        fi
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+             check_ssd 'data1'
+             check_ssd 'data5'
+             check_ssd 'data10'
+         fi
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-S2103-air.gz01.conf"
      fi
      export SERVICE_NAME
