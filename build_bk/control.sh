@@ -615,6 +615,21 @@ function init_server_info() {
               check_ssd 'data0'----------
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.native.rt-core.us01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+        if [[ ${is_check_ssd} == "true" ]];then
+            check_ssd 'data0'
+        fi
+        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-air.bookkeeper.dop.ddmq.didi.com ]]; then
+        if [[ ${is_check_ssd} == "true" ]];then
+            check_ssd 'data0'
+        fi
+        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level3-S2103-air.bookkeeper.dop.ddmq.didi.com ]]; then
+        if [[ ${is_check_ssd} == "true" ]];then
+            check_ssd 'data0'
+        fi
+        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-S2103-air.gz01.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
