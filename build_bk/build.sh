@@ -18,13 +18,24 @@
 # under the License.
 #
 
+set -x
+if [ -d "/usr/local/jdk1.8.0_65" ]; then
+    export JAVA_HOME=/usr/local/jdk1.8.0_65
+    export PATH=$JAVA_HOME/bin:$PATH
+fi
+export MAVEN_HOME=/home/scmtools/thirdparty/maven-3.6.3
+export PATH=$MAVEN_HOME/bin:$PATH
+
 CURDIR=`pwd`
 echo "CURDIR: $CURDIR"
+PARENT_PATH=$CURDIR/..
 OUTPUT_PATH=$CURDIR/output
 
-mkdir -p $OUTPUT_PATH
-rsync -av --exclude build.sh --exclude output * $OUTPUT_PATH
+cd $PARENT_PATH
 
+echo "start build bookkeeper....."
+echo "running: mvn clean package -DskipTests -T2C"
+mvn clean package -DskipTests -T2C
 ret=$?
 if [ $ret -ne 0 ];then
     echo "===== maven build failure ====="
@@ -32,3 +43,16 @@ if [ $ret -ne 0 ];then
 else
     echo -n "===== maven build successfully! ====="
 fi
+
+mkdir -p $OUTPUT_PATH
+mkdir -p $OUTPUT_PATH/target
+
+# copy control.sh to output
+rsync -av --exclude build.sh --exclude output * $OUTPUT_PATH
+# copy jar to output/target
+if [ ! -d "bookkeeper-dist/server/target/" ];then
+  echo "==== bookkeeper-dist/server/target not exist ===="
+  exit 1
+fi
+tree -h bookkeeper-dist/server/target
+cp bookkeeper-dist/server/target/bookkeeper-server-*-bin.tar.gz  ${OUTPUT_PATH}/target/

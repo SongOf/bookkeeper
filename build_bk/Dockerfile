@@ -17,7 +17,7 @@
 # under the License.
 #
 
-FROM registry.xiaojukeji.com/mq/dop-bookkeeper:stable
+FROM registry.xiaojukeji.com/mq/dop-base-jdk11:stable
 
 COPY 899-logsymbol.required.sh  /etc/container/init/
 COPY 990-startservice.required.sh  /etc/container/init/
@@ -28,7 +28,10 @@ ENV DEPLOY_APOLLO_NOT_NEED_START 1
 # yum -y update tzdata 这个命令专为 sofi环境校正夏令时设置
 RUN yum -y update tzdata
 RUN mkdir /home/xiaoju/pulsar_bk/
+RUN mkdir /home/xiaoju/dop_bookkeeper_tmp/
 RUN ls -alh
+
+COPY target/bookkeeper-server-*-bin.tar.gz /home/xiaoju/dop_bookkeeper_tmp/
 RUN tar -zxf /home/xiaoju/dop_bookkeeper_tmp/bookkeeper-server-*-bin.tar.gz -C /home/xiaoju/pulsar_bk/ --strip-components 1
 RUN rm -rf /home/xiaoju/dop_bookkeeper_tmp
 COPY control.sh /home/xiaoju/pulsar_bk/control.sh
