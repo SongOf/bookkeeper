@@ -248,8 +248,60 @@ function init_server_info() {
 
      if [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-j2ssdl2ssd-v.perf-autorecovery.bookkeeper.dop.ddmq.didi.com ]]; then
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-j2ssdl2ssd.conf"
-     elif [[ ${SERVICE_CLUSTER_NAME} == hna-pre-v.preview-autorecovery.preview-bookkeeper.dop.ddmq.didi.com ]]; then
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-pre-v.preview.preview-autorecovery.dop.ddmq.didi.com ]]; then
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.hna.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus01-pre-v.preview.preview-autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.pus01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level4.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level4.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.level2-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.jy01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnd-v.level1-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-pro.jy01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.map-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.map-air.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.map-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.map-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level3-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level3-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-air.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus05-v.level3-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.pus05.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level1-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.ys.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level1-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnc-v.level1-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hnc.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnf-v.level1-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hnf.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus01-v.level3-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-air.pus01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus01-v.level3.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.pus01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus02-v.level3.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3.pus02.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == pus03-v.level3-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level3-pro.pus03.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hne-v.level1-air.autorecovery.kflower.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level1-air.hne.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == us01-v.level2-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-air.us01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == xna-v.level2.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2.styd.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnc-v.bike-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.bike-pro.hnc.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-air.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-air.gz01.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
