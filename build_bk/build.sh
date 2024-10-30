@@ -48,7 +48,7 @@ mkdir -p $OUTPUT_PATH
 mkdir -p $OUTPUT_PATH/target
 
 # copy control.sh to output
-rsync -av --exclude build.sh --exclude output * $OUTPUT_PATH
+rsync -av --exclude build.sh --exclude output $CURDIR/* $OUTPUT_PATH
 # copy jar to output/target
 if [ ! -d "bookkeeper-dist/server/target/" ];then
   echo "==== bookkeeper-dist/server/target not exist ===="
