@@ -90,7 +90,16 @@
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
                 <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
             </Policies>
-            <DefaultRolloverStrategy max="1000"/>
+            <DefaultRolloverStrategy max="1000">
+                <Delete basePath="${env:LOG_BASE_DIR}" maxDepth="3" followLinks="true">
+                    <IfFileName glob="warn_error.log*">
+                        <IfAny>
+                            <IfLastModified age="7d" />
+                            <IfAccumulatedFileCount exceeds="1000" />
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
         <RollingRandomAccessFile name="PulsarBookieAppender" fileName="logs/pulsar-bookie.log"
                                  filePattern="logs/old/pulsar-bookie.log-%d{yyyy-MM-dd-HH}.%i">
@@ -99,7 +108,16 @@
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
                 <SizeBasedTriggeringPolicy size="${env:SIZE_PER_LOG}"/>
             </Policies>
-            <DefaultRolloverStrategy max="1000"/>
+            <DefaultRolloverStrategy max="1000">
+                <Delete basePath="${env:LOG_BASE_DIR}" maxDepth="3" followLinks="true">
+                    <IfFileName glob="pulsar-bookie.log*">
+                        <IfAny>
+                            <IfLastModified age="7d" />
+                            <IfAccumulatedFileCount exceeds="1000" />
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>

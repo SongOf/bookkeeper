@@ -124,7 +124,8 @@ function start() {
              -DAsyncLoggerConfig.RingBufferSize=262144
              -Dlog4j2.AsyncQueueFullPolicy=Discard
              -Dlog4j2.DiscardThreshold=ERROR
-             -Dlog4j2.formatMsgNoLookups=true "
+             -Dlog4j2.formatMsgNoLookups=true
+             -Dlog4j2.scriptEnableLanguages=groovy "
 
     OPTS="$OPTS $LOG_OPTS"
     OPTS="$OPTS -Dio.netty.leakDetection.level=DISABLED"
