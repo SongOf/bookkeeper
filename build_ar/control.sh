@@ -200,7 +200,7 @@ function backup_logs() {
     LOG_SUFFIX=$(date +%Y%m%d-%H%M%S)
     for var in $(ls ${BOOKIE_LOG_DIR})
     do
-        if [ -f "${BOOKIE_LOG_DIR}/${var}" -a "${var}" != "control.log" ]; then
+        if [ -f "${BOOKIE_LOG_DIR}/${var}" ] && [ "${var}" != "control.log" ] && [[ "$var" != gc.log* ]]; then
             mv "${BOOKIE_LOG_DIR}/${var}" "${BOOKIE_LOG_DIR}/old/${var}.${LOG_SUFFIX}"
         fi
     done
