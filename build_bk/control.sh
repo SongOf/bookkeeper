@@ -466,7 +466,7 @@ function init_server_info() {
               check_ssd 'data0'
           fi
           BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-j2ssdl2ssd.conf"
-     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-perf-test-v.perf.bookkeeper.dop.ddmq.didi.com ]]; then
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-perf-test-v.perf.bookkeeper.dop.ddmq.didi.com ]]; then
           if [[ ${is_check_ssd} == "true" ]];then
               check_ssd 'data0'
           fi
