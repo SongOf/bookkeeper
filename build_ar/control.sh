@@ -247,7 +247,7 @@ function init_server_info() {
      # SERVICE_CLUSTER_NAME: e.g, gz01.cproxy-1.binlog.fd.rocketmq.fd.didi.com
      SERVICE_CLUSTER_NAME=${CLUSTER_NAME}"."${SERVICE_NAME}
 
-     if [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-perf-test-v.perf.autorecovery.dop.ddmq.didi.com ]]; then
+     if [[ ${SERVICE_CLUSTER_NAME} == hnb-pre-perf_test-v.perf.autorecovery.dop.ddmq.didi.com ]]; then
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.perf-test.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-pre-v.preview.preview-autorecovery.dop.ddmq.didi.com ]]; then
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.preview.hna.conf"
