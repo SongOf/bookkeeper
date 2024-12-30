@@ -89,6 +89,7 @@ public interface HttpServer {
         CLUSTER_INFO,
         SUSPEND_GC_COMPACTION,
         TRIGGER_ENTRY_LOCATION_COMPACT,
+        BOOKIE_COOKIE,
         // autorecovery
         AUTORECOVERY_STATUS,
         RECOVERY_BOOKIE,
