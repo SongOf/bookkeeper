@@ -105,6 +105,7 @@
     </developer>
   </developers>
   <properties>
+    <os.detected.classifier>osx-x86_64</os.detected.classifier>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <javac.target>1.8</javac.target>
