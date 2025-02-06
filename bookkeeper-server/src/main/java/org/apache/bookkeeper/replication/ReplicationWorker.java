@@ -312,6 +312,9 @@ public class ReplicationWorker implements Runnable {
         }
         long firstEntryIdOfFragment = ledgerFragment.getFirstEntryId();
         long lastEntryIdOfFragment = ledgerFragment.getLastKnownEntryId();
+        if (firstEntryIdOfFragment > lastEntryIdOfFragment) {
+            return true;
+        }
         NavigableSet<Long> entriesOfThisFragmentUnableToRead = entriesUnableToReadForThisLedger
                 .subSet(firstEntryIdOfFragment, true, lastEntryIdOfFragment, true);
         if (entriesOfThisFragmentUnableToRead.isEmpty()) {
