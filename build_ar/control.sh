@@ -303,6 +303,8 @@ function init_server_info() {
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.gz01.conf"
      elif [[ ${SERVICE_CLUSTER_NAME} == hna-v.level2-S2103-air.autorecovery.dop.ddmq.didi.com ]]; then
          BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-air.gz01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2-S2103-pro.autorecovery.dop.ddmq.didi.com ]]; then
+         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.ys.conf"
      fi
      export SERVICE_NAME
      export CLUSTER_NAME
