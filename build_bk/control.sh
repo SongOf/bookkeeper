@@ -658,7 +658,16 @@ function init_server_info() {
              check_ssd 'data10'
          fi
         BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.us01.conf"
+     elif [[ ${SERVICE_CLUSTER_NAME} == hnb-v.level2-S2103-pro.bookkeeper.dop.ddmq.didi.com ]]; then
+         if [[ ${is_check_ssd} == "true" ]];then
+             check_ssd 'data0'
+             check_ssd 'data1'
+             check_ssd 'data5'
+             check_ssd 'data10'
+         fi
+        BOOKIE_CONF="${BOOKIE_HOME}/conf/bk_conf/bookkeeper.level2-S2103-pro.ys.conf"
      fi
+
      export SERVICE_NAME
      export CLUSTER_NAME
      export SERVICE_CLUSTER_NAME
